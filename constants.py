@@ -1,0 +1,18 @@
+# constants.py
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+TILE_SIZE = 64
+FPS = 60
+
+# 色の定義
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (100, 100, 100)
+RED = (200, 0, 0)
+GREEN = (34, 139, 34)
+BLUE = (0, 0, 255)
+
+# キャラクター設定
+SPRITE_WIDTH = 20
+SPRITE_HEIGHT = 28
+SCALE = 3

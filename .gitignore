@@ -1,0 +1,10 @@
+# --- Python 関連 ---
+__pycache__/
+.venv/
+
+# --- 画像アセットの一括除外 ---
+# assets/images フォルダの中身をすべて無視する
+assets/images/*
+
+# ただし、フォルダ構造を維持するために .gitkeep だけは例外にする
+!assets/images/.gitkeep
