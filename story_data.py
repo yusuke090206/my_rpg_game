@@ -18,12 +18,12 @@ class StoryManager:
         "accept": {
             "text": ["「……よし、屋敷へ向かうとしよう。準備を整えるか。」"],
             "type": "normal",
-            "next": None  # ここでログが止まる
+            "next": None
         },
         "stay": {
             "text": ["「今はもう少し、この部屋で考えを整理したい……。」"],
             "type": "normal",
-            "next": None  # ここでログが止まる
+            "next": None
         }
     }
     self.current_scene = "intro"
@@ -43,7 +43,7 @@ class StoryManager:
       if scene.get("next"):
         self.current_scene = scene["next"]
         self.text_index = 0
-        return True  # 次のシーンへ
+        return True
       else:
-        return False  # 会話終了（探索へ戻る）
+        return False
     return True
