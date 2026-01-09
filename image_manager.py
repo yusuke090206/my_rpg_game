@@ -34,5 +34,5 @@ def init():
 
   # 2. 顔グラフィック
   load_image("main_face", "main_chara_face.png")
-  load_image("john_face", "face_john.png")
-  load_image("anna_face", "face_anna.png")
+  load_image("john_face", "john_chara_face.png")
+  load_image("anna_face", "anna_chara_face.png")
