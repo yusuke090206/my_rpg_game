@@ -2,11 +2,25 @@
 class StoryManager:
   def __init__(self):
     self.scenes = {
+        "start_scene": {
+            "text": [
+                "少し昔のとある世界のとある街。",
+                "あなたは５年前事故で記憶を失ってしまい妻を探すために探偵業を始めた。",
+            ],
+            "show_face": None,
+            "type": "normal",
+            "next": "intro"
+        },
         "intro": {
             "text": [
-                "暖かい春の日だ。机には一通の依頼状が届いている。",
-                "送り主は不明だ。"
+                "記憶を失ってから長いこと立ったけど探偵業も板についてきたな",
+                "まだ妻は見つけられてないんだけど…",
+                "新しい依頼だ。",
+                "？この依頼書…",
+                "送り主が書かれてないな。",
+                "報酬は前払いされているけど",
             ],
+            "show_face": True,
             "type": "normal",
             "next": "choice_scene"
         },
@@ -26,7 +40,7 @@ class StoryManager:
             "next": None
         }
     }
-    self.current_scene = "intro"
+    self.current_scene = "start_scene"
     self.text_index = 0
     self.items = []
 

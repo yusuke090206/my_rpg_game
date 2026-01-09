@@ -58,10 +58,15 @@ frame = 1
 anim_timer = 0
 
 def draw_dialogue_ui():
+  scene_data = story.get_current_scene_data()
+  show_face = scene_data.get("show_face", None)
+
   box_rect = pygame.Rect(40, 420, 720, 150)
   pygame.draw.rect(screen, (20, 20, 20), box_rect)
   pygame.draw.rect(screen, c.WHITE, box_rect, 2)
-  face_manager.draw(screen)
+
+  if show_face:
+    face_manager.draw(screen)
 
   current_text = story.get_current_text()
   scene_data = story.get_current_scene_data()

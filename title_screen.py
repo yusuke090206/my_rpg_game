@@ -17,7 +17,7 @@ class TitleScreen:
     screen.blit(title_label, title_rect)
 
     # サブタイトル
-    subtitle_label = self.font_title.render("～誰もいなくなった屋敷～", True, c.WHITE)
+    subtitle_label = self.font_title.render("～屋敷の調査～", True, c.WHITE)
     subtitle_rect = subtitle_label.get_rect(
         center=(c.SCREEN_WIDTH // 2, 280))
     screen.blit(subtitle_label, subtitle_rect)
