@@ -1,7 +1,7 @@
 import constants as c
 
 DATA = {
-    "img_path": "yasiki_out.png",
+    "img_path": "piano_room.png",
     "spawn_pos": [400, 300],
     "collision": [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
