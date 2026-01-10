@@ -37,7 +37,8 @@ class StoryManager:
         "stay": {
             "text": ["「今はもう少し、この部屋で考えを整理したい……。」"],
             "type": "normal",
-            "next": None
+            "next": None,
+            "is_ending": True,
         }
     }
     self.current_scene = "start_scene"

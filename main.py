@@ -101,13 +101,22 @@ while True:
             story.current_scene = scene["choices"]["N"]; story.text_index = 0
         elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
           if not story.next_step():
-            game_state = "EXPLORING"
+            if scene.get("is_ending", False):
+              game_state = "ENDING"
+            else:
+              game_state = "EXPLORING"
     elif game_state == "EXPLORING":
       if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
         game_state = "INVENTORY"
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
         game_state = "EXPLORING"
+    elif game_state == "ENDING":
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_r:
+          game_state = "TITLE"
+          story.current_scene = "start_scene"
+          story.text_index = 0
 
   if game_state == "EXPLORING":
     keys = pygame.key.get_pressed()
@@ -132,9 +141,19 @@ while True:
       anim_timer += 1
       if anim_timer >= 10: frame = (frame + 1) % 3; anim_timer = 0
     else: frame = 1
-
+# タイトル表示
   if game_state == "TITLE":
     title_ui.draw(screen)
+# エンディング表示
+  elif game_state == "ENDING":
+    screen.fill((0, 0, 0))
+    end_text = font_title.render("THE END", True, (200, 0, 0))
+    sub_text = font_main.render("真相は誰も知らない", True, c.WHITE)
+    restart_text = font_main.render("Press R to Title", True, c.RED)
+
+    screen.blit(end_text, (c.SCREEN_WIDTH // 2 - 100, 200))
+    screen.blit(sub_text, (c.SCREEN_WIDTH // 2 - 100, 300))
+    screen.blit(restart_text, (c.SCREEN_WIDTH // 2 - 100, 500))
   else:
     maps.draw(screen)
     # もし debug_tool でエラーが出るなら下の行を消してください
@@ -153,6 +172,12 @@ while True:
       draw_dialogue_ui()
     elif game_state == "INVENTORY":
       inventory_ui.draw(screen, story.items)
+    # reset処理
+    if game_state == "ENDING":
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+        game_state = "TITLE"
+        story.current_scene = "start_scene"
+        story.text_index = 0
 
   pygame.display.flip()
   clock.tick(c.FPS)
