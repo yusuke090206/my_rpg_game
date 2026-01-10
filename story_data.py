@@ -84,6 +84,28 @@ class StoryManager:
             "next": None,
             "give_item": "懐かしいパン"
         },
+        "forest": {
+            "text": [
+                "こんなところに指輪の落とし物だ。一度持っていこうか？"
+            ],
+            "show_face": False,
+            "type": "choice",
+            "choices": {"Y": "get_ring", "N": "leave_ring"}
+        },
+        "get_ring": {
+            "text": ["指輪を拾った。後で持ち主を探そう。"],
+            "show_face": True,
+            "type": "normal",
+            "next": None,
+            "give_item": "指輪"
+        },
+        "leave_ring": {
+            "text": ["指輪はそのままにしておこう。"],
+            "show_face": True,
+            "type": "normal",
+            "next": None
+        },
+
     }
 
     self.current_scene = "start_scene"
