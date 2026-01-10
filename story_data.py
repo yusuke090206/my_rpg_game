@@ -33,12 +33,14 @@ class StoryManager:
         "accept": {
             "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。"],
             "type": "normal",
+            "show_face": True,
             "next": None
         },
         "stay": {
             "text": ["怪しい依頼は断ろう。この依頼は受けない。"],
             "type": "normal",
             "next": None,
+            "show_face": True,
             "is_ending": True,
         },
 
