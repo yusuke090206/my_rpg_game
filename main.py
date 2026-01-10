@@ -50,6 +50,7 @@ try:
 except:
   HAS_IMAGE = False
 
+# --- ゲーム状態・変数 ---
 game_state = "TITLE"
 player_pos = list(maps.get_spawn_pos())
 player_speed = 4
@@ -57,33 +58,56 @@ direction = 0
 frame = 1
 anim_timer = 0
 
-def draw_dialogue_ui():
-  scene_data = story.get_current_scene_data()
-  show_face = scene_data.get("show_face", None)
+# 【追加】タイプライター演出用変数
+text_timer = 0
+visible_char_count = 0
+text_speed = 2  # 数値が大きいほど遅い
 
+def draw_dialogue_ui():
+  global visible_char_count
+  scene_data = story.get_current_scene_data()
+  show_face = scene_data.get("show_face", False)  # NoneではなくFalseをデフォルトに
+
+  # ダイアログ枠
   box_rect = pygame.Rect(40, 420, 720, 150)
   pygame.draw.rect(screen, (20, 20, 20), box_rect)
   pygame.draw.rect(screen, c.WHITE, box_rect, 2)
 
+  # 顔表示
   if show_face:
     face_manager.draw(screen)
 
-  current_text = story.get_current_text()
-  scene_data = story.get_current_scene_data()
-  line_limit = 30
-  lines = [current_text[i:i + line_limit]
-           for i in range(0, len(current_text), line_limit)]
+  # テキスト表示（タイプライター対応）
+  full_text = story.get_current_text()
+  display_text = full_text[:visible_char_count]  # 現在の文字数分だけ切り出す
+
+  # 顔があるときは右にずらす(220px)、ないときは(60px)
+  text_x = 80 if show_face else 60
+  line_limit = 20 if show_face else 25
+
+  lines = [display_text[i:i + line_limit]
+           for i in range(0, len(display_text), line_limit)]
 
   for i, line in enumerate(lines):
     txt_surf = font_main.render(line, True, c.WHITE)
-    screen.blit(txt_surf, (60, 445 + i * 30))
+    screen.blit(txt_surf, (text_x, 445 + i * 30))
 
-  guide = "[Y/N] で選択" if scene_data["type"] == "choice" else "SPACEで進む"
-  g_surf = font_main.render(guide, True, (180, 180, 180))
-  screen.blit(g_surf, (60, 535))
+  # 全部表示されたらガイドを出す
+  if visible_char_count >= len(full_text):
+    guide = "[Y/N] で選択" if scene_data["type"] == "choice" else "SPACEで進む"
+    g_surf = font_main.render(guide, True, (180, 180, 180))
+    screen.blit(g_surf, (60, 535))
 
 # --- 4. メインループ ---
 while True:
+  # --- A. 更新処理 (Update) ---
+  if game_state == "DIALOGUE":
+    text_timer += 1
+    if text_timer >= text_speed:
+      visible_char_count += 1
+      text_timer = 0
+
+  # --- B. イベント処理 (Events) ---
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       pygame.quit(); sys.exit()
@@ -91,33 +115,54 @@ while True:
     if game_state == "TITLE":
       if event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
         game_state = "DIALOGUE"
+        visible_char_count = 0
+
     elif game_state == "DIALOGUE":
       if event.type == pygame.KEYDOWN:
         scene = story.get_current_scene_data()
+        full_text = story.get_current_text()
+
+        # 文字が流れている最中か？
+        is_typing = visible_char_count < len(full_text)
+
         if scene["type"] == "choice":
-          if event.key == pygame.K_y:
-            story.current_scene = scene["choices"]["Y"]; story.text_index = 0
-          elif event.key == pygame.K_n:
-            story.current_scene = scene["choices"]["N"]; story.text_index = 0
+          if is_typing:
+            visible_char_count = len(full_text)  # スキップして全表示
+          else:
+            if event.key == pygame.K_y:
+              story.current_scene = scene["choices"]["Y"]; story.text_index = 0
+              visible_char_count = 0
+            elif event.key == pygame.K_n:
+              story.current_scene = scene["choices"]["N"]; story.text_index = 0
+              visible_char_count = 0
+
         elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
-          if not story.next_step():
-            if scene.get("is_ending", False):
-              game_state = "ENDING"
-            else:
-              game_state = "EXPLORING"
+          if is_typing:
+            visible_char_count = len(full_text)  # スキップして全表示
+          else:
+            if not story.next_step():
+              if scene.get("is_ending", False):
+                game_state = "ENDING"
+              else:
+                game_state = "EXPLORING"
+            visible_char_count = 0  # 次のセリフ用にリセット
+
     elif game_state == "EXPLORING":
       if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
         game_state = "INVENTORY"
+
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
         game_state = "EXPLORING"
-    elif game_state == "ENDING":
-      if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_r:
-          game_state = "TITLE"
-          story.current_scene = "start_scene"
-          story.text_index = 0
 
+    elif game_state == "ENDING":
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+        game_state = "TITLE"
+        story.current_scene = "start_scene"
+        story.text_index = 0
+        visible_char_count = 0
+
+  # --- C. 移動・マップ処理 (Logic) ---
   if game_state == "EXPLORING":
     keys = pygame.key.get_pressed()
     nx, ny = player_pos[0], player_pos[1]
@@ -141,25 +186,27 @@ while True:
       anim_timer += 1
       if anim_timer >= 10: frame = (frame + 1) % 3; anim_timer = 0
     else: frame = 1
-# タイトル表示
+
+  # --- D. 描画処理 (Draw) ---
   if game_state == "TITLE":
     title_ui.draw(screen)
-# エンディング表示
+
   elif game_state == "ENDING":
     screen.fill((0, 0, 0))
     end_text = font_title.render("THE END", True, (200, 0, 0))
     sub_text = font_main.render("真相は誰も知らない", True, c.WHITE)
     restart_text = font_main.render("Press R to Title", True, c.RED)
-
     screen.blit(end_text, (c.SCREEN_WIDTH // 2 - 100, 200))
     screen.blit(sub_text, (c.SCREEN_WIDTH // 2 - 100, 300))
     screen.blit(restart_text, (c.SCREEN_WIDTH // 2 - 100, 500))
+
   else:
+    # マップとグリッド
     maps.draw(screen)
-    # もし debug_tool でエラーが出るなら下の行を消してください
     try: debug_tool.draw_grid(screen)
     except: pass
 
+    # プレイヤー
     if HAS_IMAGE:
       curr_s = get_image(sprite_sheet, frame, direction,
                          c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
@@ -168,16 +215,11 @@ while True:
       pygame.draw.rect(
           screen, c.BLUE, (player_pos[0], player_pos[1], 40, 80))
 
+    # UI類
     if game_state == "DIALOGUE":
       draw_dialogue_ui()
     elif game_state == "INVENTORY":
       inventory_ui.draw(screen, story.items)
-    # reset処理
-    if game_state == "ENDING":
-      if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-        game_state = "TITLE"
-        story.current_scene = "start_scene"
-        story.text_index = 0
 
   pygame.display.flip()
   clock.tick(c.FPS)

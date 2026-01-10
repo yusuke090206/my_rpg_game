@@ -19,6 +19,7 @@ class StoryManager:
                 "？この依頼書…",
                 "送り主が書かれてないな。",
                 "報酬は前払いされているけど",
+                "受けるも受けないもあなた次第…か",
             ],
             "show_face": True,
             "type": "normal",
@@ -30,12 +31,12 @@ class StoryManager:
             "choices": {"Y": "accept", "N": "stay"}
         },
         "accept": {
-            "text": ["「……よし、屋敷へ向かうとしよう。準備を整えるか。」"],
+            "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。"],
             "type": "normal",
             "next": None
         },
         "stay": {
-            "text": ["「今はもう少し、この部屋で考えを整理したい……。」"],
+            "text": ["怪しい依頼は断ろう。この依頼は受けない。"],
             "type": "normal",
             "next": None,
             "is_ending": True,
