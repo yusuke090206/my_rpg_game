@@ -16,8 +16,8 @@ DATA = {
         [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
     ],
     "exits": [
-        # 画面下部に行くと forest へ
-        {"rect": (0, 560, 800, 40), "target": "forest"}
+        {"rect": (0, 560, 800, 40), "target": "forest"},
+        {"rect": (400, 0, 800, 40), "target": "town"},
     ],
     "objects": [
         {
@@ -25,5 +25,5 @@ DATA = {
             "rect": (400, 250, 100, 64),
             "target_scene": "forest"  # 調べた時に飛ぶシーン名
         }
-    ]
+    ],
 }

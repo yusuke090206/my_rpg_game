@@ -95,7 +95,7 @@ class StoryManager:
             "choices": {"Y": "get_ring", "N": "leave_ring"}
         },
         "get_ring": {
-            "text": ["指輪を拾った。後で持ち主を探そう。"],
+            "text": ["今なところに指輪がある。後で持ち主を探そう。"],
             "show_face": True,
             "type": "normal",
             "next": None,
