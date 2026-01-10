@@ -1,14 +1,15 @@
 import pygame
 import os
 import constants as c
-from maps import home_map, town_map
+from maps import home_map, town_map, forest_map
 
 class MapManager:
   def __init__(self):
     # マップデータの登録
     self.all_maps = {
         "home": getattr(home_map, 'DATA', {}),
-        "town": getattr(town_map, 'DATA', {})
+        "town": getattr(town_map, 'DATA', {}),
+        "forest": getattr(forest_map, 'DATA', {}),
     }
     self.current_map_key = "home"
     self.bg_image = None
@@ -60,3 +61,13 @@ class MapManager:
       screen.blit(self.bg_image, (0, 0))
     else:
       screen.fill((100, 0, 0))  # 背景がない時は暗い赤
+
+  def get_object_at(self, x, y):
+    data = self.all_maps.get(self.current_map_key, {})
+    objects = data.get("objects", [])
+    for obj in objects:
+      # 判定を少し広め(inflate)にして調べやすくする
+      rect = pygame.Rect(obj["rect"]).inflate(20, 20)
+      if rect.collidepoint(x, y):
+        return obj
+    return None

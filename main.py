@@ -121,8 +121,6 @@ while True:
       if event.type == pygame.KEYDOWN:
         scene = story.get_current_scene_data()
         full_text = story.get_current_text()
-
-        # 文字が流れている最中か？
         is_typing = visible_char_count < len(full_text)
 
         if scene["type"] == "choice":
@@ -140,6 +138,9 @@ while True:
           if is_typing:
             visible_char_count = len(full_text)  # スキップして全表示
           else:
+            item_name = scene.get("give_item")
+            if item_name and item_name not in story.items:
+              story.items.append(item_name)  # インベントリに追加
             if not story.next_step():
               if scene.get("is_ending", False):
                 game_state = "ENDING"
@@ -150,6 +151,14 @@ while True:
     elif game_state == "EXPLORING":
       if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
         game_state = "INVENTORY"
+      elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+          # プレイヤーの足元(player_pos)の座標でオブジェクトを探す
+        obj = maps.get_object_at(player_pos[0] + 30, player_pos[1] + 70)
+        if obj:
+          story.current_scene = obj["target_scene"]
+          story.text_index = 0
+          game_state = "DIALOGUE"
+          visible_char_count = 0
 
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
@@ -220,6 +229,10 @@ while True:
       draw_dialogue_ui()
     elif game_state == "INVENTORY":
       inventory_ui.draw(screen, story.items)
+    pos_text = f"X: {int(player_pos[0])} Y: {int(player_pos[1])}"
+    pos_surf = font_main.render(pos_text, True, (255, 255, 0))  # 目立つように黄色
+    # 右端から20px、上から20pxの位置に描画
+    screen.blit(pos_surf, (c.SCREEN_WIDTH - pos_surf.get_width() - 20, 20))
 
   pygame.display.flip()
   clock.tick(c.FPS)

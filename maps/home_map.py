@@ -19,5 +19,12 @@ DATA = {
     "exits": [
         # y=550以降が出口。spawn_posの300とは離れているので安全。
         {"rect": (0, 550, 800, 50), "target": "town"}
+    ],
+    "objects": [
+        {
+            "name": "机",
+            "rect": (310, 320, 80, 64),  # x, y, width, height
+            "target_scene": "desk_investigation"  # 調べた時に飛ぶシーン名
+        }
     ]
 }

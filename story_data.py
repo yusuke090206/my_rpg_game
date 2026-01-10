@@ -40,8 +40,52 @@ class StoryManager:
             "type": "normal",
             "next": None,
             "is_ending": True,
-        }
+        },
+
+        "desk_investigation": {
+            "text": [
+                "机の上に、一枚の写真が置かれている。",
+                "妻との写真だ…。",
+            ],
+            "show_face": True,
+            "type": "normal",
+            "next": "photo_choice",
+            "is_ending": False
+        },
+        "photo_choice": {
+            "text": ["この写真を持っていきますか？"],
+            "show_face": False,
+            "type": "choice",
+            "choices": {"Y": "get_photo", "N": "leave_photo"}
+        },
+        "get_photo": {
+            "text": ["何か妻の手がかりがあるかもしれないしな。持っていこう。"],
+            "show_face": True,
+            "type": "normal",
+            "next": None,
+            "give_item": "夫婦写真"
+        },
+        "leave_photo": {
+            "text": ["今回は必要ないだろう"],
+            "show_face": True,
+            "type": "normal",
+            "next": None
+        },
+        "bakery": {
+            "text": [
+                "おなかもすいたしパンを買っていこうかな。",
+                "店員さん。これお願いします。",
+                "……",
+                "もぐもぐ…おいしい!",
+                "でもこの味…どこかで食べたことある気がするな。",
+            ],
+            "show_face": True,
+            "type": "normal",
+            "next": None,
+            "give_item": "懐かしいパン"
+        },
     }
+
     self.current_scene = "start_scene"
     self.text_index = 0
     self.items = []
