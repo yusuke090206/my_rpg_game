@@ -1,7 +1,7 @@
 import pygame
 import os
 import constants as c
-from maps import home_map, town_map, forest_map
+from maps import home_map, town_map, forest_map, yasiki_out, yasiki, piano_room, syokutaku, monooki, sinsitu
 
 class MapManager:
   def __init__(self):
@@ -10,6 +10,12 @@ class MapManager:
         "home": getattr(home_map, 'DATA', {}),
         "town": getattr(town_map, 'DATA', {}),
         "forest": getattr(forest_map, 'DATA', {}),
+        "yasiki_out": getattr(yasiki_out, 'DATA', {}),
+        "yasiki": getattr(yasiki, 'DATA', {}),
+        "piano_room": getattr(piano_room, 'DATA', {}),
+        "syokutaku": getattr(syokutaku, 'DATA', {}),
+        "monooki": getattr(monooki, 'DATA', {}),
+        "sinsitu": getattr(sinsitu, 'DATA', {}),
     }
     self.current_map_key = "home"
     self.bg_image = None

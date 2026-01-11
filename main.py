@@ -35,19 +35,27 @@ title_ui = TitleScreen(font_title, font_main)
 inventory_ui = InventoryUI(font_main)
 face_manager.init()
 
-# --- 3. プレイヤーグラフィック読み込み ---
+# --- 3. グラフィック読み込み関数 ---
 def get_image(sheet, frame_x, frame_y, width, height, scale):
   image = pygame.Surface((width, height), pygame.SRCALPHA)
   image.blit(sheet, (0, 0), (frame_x * width,
-             frame_y * height, width, height))
+                             frame_y * height, width, height))
   return pygame.transform.scale(image, (int(width * scale), int(height * scale)))
 
+# 【更新】NPCとプレイヤーの画像読み込み
+base_dir = os.path.dirname(os.path.abspath(__file__))
+npc_sheets = {}
 try:
-  base_dir = os.path.dirname(os.path.abspath(__file__))
+  # メインキャラ
   chara_path = os.path.join(base_dir, "assets", "images", "main_chara.png")
   sprite_sheet = pygame.image.load(chara_path).convert_alpha()
   HAS_IMAGE = True
-except:
+  # NPC 3人
+  for name in ["john", "monika", "anna"]:
+    path = os.path.join(base_dir, "assets", "images", f"{name}_chara.png")
+    npc_sheets[name] = pygame.image.load(path).convert_alpha()
+except Exception as e:
+  print(f"画像読み込みエラー: {e}")
   HAS_IMAGE = False
 
 # --- ゲーム状態・変数 ---
@@ -58,32 +66,33 @@ direction = 0
 frame = 1
 anim_timer = 0
 
-# 【追加】タイプライター演出用変数
 text_timer = 0
 visible_char_count = 0
-text_speed = 2  # 数値が大きいほど遅い
+text_speed = 2
 
+# 【更新】ダイアログ描画関数（face_id対応）
 def draw_dialogue_ui():
   global visible_char_count
   scene_data = story.get_current_scene_data()
-  show_face = scene_data.get("show_face", False)  # NoneではなくFalseをデフォルトに
+  # face_id があるか確認
+  face_id = scene_data.get("face_id")
 
   # ダイアログ枠
   box_rect = pygame.Rect(40, 420, 720, 150)
   pygame.draw.rect(screen, (20, 20, 20), box_rect)
   pygame.draw.rect(screen, c.WHITE, box_rect, 2)
 
-  # 顔表示
-  if show_face:
-    face_manager.draw(screen)
+  # 顔表示（IDを渡して描画）
+  if face_id:
+    face_manager.draw(screen, face_id)
 
-  # テキスト表示（タイプライター対応）
+  # テキスト表示
   full_text = story.get_current_text()
-  display_text = full_text[:visible_char_count]  # 現在の文字数分だけ切り出す
+  display_text = full_text[:visible_char_count]
 
   # 顔があるときは右にずらす(220px)、ないときは(60px)
-  text_x = 80 if show_face else 60
-  line_limit = 20 if show_face else 25
+  text_x = 220 if face_id else 60
+  line_limit = 20 if face_id else 25
 
   lines = [display_text[i:i + line_limit]
            for i in range(0, len(display_text), line_limit)]
@@ -92,7 +101,6 @@ def draw_dialogue_ui():
     txt_surf = font_main.render(line, True, c.WHITE)
     screen.blit(txt_surf, (text_x, 445 + i * 30))
 
-  # 全部表示されたらガイドを出す
   if visible_char_count >= len(full_text):
     guide = "[Y/N] で選択" if scene_data["type"] == "choice" else "SPACEで進む"
     g_surf = font_main.render(guide, True, (180, 180, 180))
@@ -125,7 +133,7 @@ while True:
 
         if scene["type"] == "choice":
           if is_typing:
-            visible_char_count = len(full_text)  # スキップして全表示
+            visible_char_count = len(full_text)
           else:
             if event.key == pygame.K_y:
               story.current_scene = scene["choices"]["Y"]; story.text_index = 0
@@ -136,29 +144,32 @@ while True:
 
         elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
           if is_typing:
-            visible_char_count = len(full_text)  # スキップして全表示
+            visible_char_count = len(full_text)
           else:
             item_name = scene.get("give_item")
             if item_name and item_name not in story.items:
-              story.items.append(item_name)  # インベントリに追加
+              story.items.append(item_name)
             if not story.next_step():
               if scene.get("is_ending", False):
                 game_state = "ENDING"
               else:
                 game_state = "EXPLORING"
-            visible_char_count = 0  # 次のセリフ用にリセット
+            visible_char_count = 0
 
     elif game_state == "EXPLORING":
-      if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-        game_state = "INVENTORY"
-      elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
-          # プレイヤーの足元(player_pos)の座標でオブジェクトを探す
-        obj = maps.get_object_at(player_pos[0] + 30, player_pos[1] + 70)
-        if obj:
-          story.current_scene = obj["target_scene"]
-          story.text_index = 0
-          game_state = "DIALOGUE"
-          visible_char_count = 0
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_e:
+          game_state = "INVENTORY"
+        elif event.key == pygame.K_f:  # Fキーで調査
+          # 足元の判定（SCALEに合わせて調整）
+          check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
+          check_y = player_pos[1] + (c.SPRITE_HEIGHT * c.SCALE) * 0.9
+          obj = maps.get_object_at(check_x, check_y)
+          if obj:
+            story.current_scene = obj["target_scene"]
+            story.text_index = 0
+            game_state = "DIALOGUE"
+            visible_char_count = 0
 
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
@@ -176,20 +187,25 @@ while True:
     keys = pygame.key.get_pressed()
     nx, ny = player_pos[0], player_pos[1]
     moving = False
+
+    # 移動
     if keys[pygame.K_a]: nx -= player_speed; direction = 1; moving = True
     elif keys[pygame.K_d]: nx += player_speed; direction = 2; moving = True
     elif keys[pygame.K_w]: ny -= player_speed; direction = 3; moving = True
     elif keys[pygame.K_s]: ny += player_speed; direction = 0; moving = True
 
-    if not maps.is_wall(nx + 20, ny + 70) and not maps.is_wall(nx + 40, ny + 70):
+    # 当たり判定（足元2点で判定）
+    f_w = (c.SPRITE_WIDTH * c.SCALE)
+    f_h = (c.SPRITE_HEIGHT * c.SCALE)
+    if not maps.is_wall(nx + f_w * 0.3, ny + f_h * 0.9) and not maps.is_wall(nx + f_w * 0.7, ny + f_h * 0.9):
       player_pos = [nx, ny]
 
+    # マップ移動
     target_map = maps.check_transition(
-        player_pos[0] + 30, player_pos[1] + 70)
-    if target_map:
-      if target_map in maps.all_maps:
-        maps.load_map(target_map)
-        player_pos = list(maps.get_spawn_pos())
+        player_pos[0] + f_w / 2, player_pos[1] + f_h * 0.9)
+    if target_map and target_map in maps.all_maps:
+      maps.load_map(target_map)
+      player_pos = list(maps.get_spawn_pos())
 
     if moving:
       anim_timer += 1
@@ -199,7 +215,6 @@ while True:
   # --- D. 描画処理 (Draw) ---
   if game_state == "TITLE":
     title_ui.draw(screen)
-
   elif game_state == "ENDING":
     screen.fill((0, 0, 0))
     end_text = font_title.render("THE END", True, (200, 0, 0))
@@ -208,12 +223,21 @@ while True:
     screen.blit(end_text, (c.SCREEN_WIDTH // 2 - 100, 200))
     screen.blit(sub_text, (c.SCREEN_WIDTH // 2 - 100, 300))
     screen.blit(restart_text, (c.SCREEN_WIDTH // 2 - 100, 500))
-
   else:
-    # マップとグリッド
     maps.draw(screen)
-    try: debug_tool.draw_grid(screen)
-    except: pass
+
+    # 【追加】NPCの描画
+    current_objects = maps.all_maps[maps.current_map_key].get("objects", [])
+    for obj in current_objects:
+      cid = obj.get("char_id")
+      if cid in npc_sheets:
+        npc_img = get_image(
+            npc_sheets[cid], 1, 0, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
+        npc_dir = obj.get("direction", 0)
+        # 取得した向き (npc_dir) を使って画像を取得
+        npc_img = get_image(
+            npc_sheets[cid], 1, npc_dir, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
+        screen.blit(npc_img, (obj["rect"][0], obj["rect"][1]))
 
     # プレイヤー
     if HAS_IMAGE:
@@ -224,14 +248,15 @@ while True:
       pygame.draw.rect(
           screen, c.BLUE, (player_pos[0], player_pos[1], 40, 80))
 
-    # UI類
+    # UI
     if game_state == "DIALOGUE":
       draw_dialogue_ui()
     elif game_state == "INVENTORY":
       inventory_ui.draw(screen, story.items)
+
+    # 座標表示
     pos_text = f"X: {int(player_pos[0])} Y: {int(player_pos[1])}"
-    pos_surf = font_main.render(pos_text, True, (255, 255, 0))  # 目立つように黄色
-    # 右端から20px、上から20pxの位置に描画
+    pos_surf = font_main.render(pos_text, True, (255, 255, 0))
     screen.blit(pos_surf, (c.SCREEN_WIDTH - pos_surf.get_width() - 20, 20))
 
   pygame.display.flip()

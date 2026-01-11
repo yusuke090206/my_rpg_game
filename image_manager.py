@@ -36,3 +36,4 @@ def init():
   load_image("main_face", "main_chara_face.png")
   load_image("john_face", "john_chara_face.png")
   load_image("anna_face", "anna_chara_face.png")
+  load_image("monika_face", "monika_chara_face.png")

@@ -95,7 +95,7 @@ class StoryManager:
             "choices": {"Y": "get_ring", "N": "leave_ring"}
         },
         "get_ring": {
-            "text": ["今なところに指輪がある。後で持ち主を探そう。"],
+            "text": ["こんなところに指輪がある。後で持ち主を探そう。"],
             "show_face": True,
             "type": "normal",
             "next": None,
@@ -107,6 +107,25 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
+        # --- story_data.py 50行目付近 ---
+        "npc_guard": {  # これをジョン（門番）にします
+            "text": ["ジョン：貴様、何用だ。ここは許可なき者は通さん。", "（……厳重に警備されているようだ）"],
+            "face_id": "john",  # face_managerに登録した名前
+            "type": "normal",
+            "next": None
+        },
+        "npc_gardener": {  # これをモニカ（庭師）にします
+            "text": ["モニカ：この屋敷のバラは、主人の誇りでしてね。", "……おや、あんた、どこかで見た顔だな？"],
+            "face_id": "monika",
+            "type": "normal",
+            "next": None
+        },
+        "npc_stranger": {  # これをアンナ（怪しい女）にします
+            "text": ["アンナ：フフフ……。あんたも『真実』を探しに来たのかい？", "あの中には、触れてはならぬ過去が眠っておるぞ。"],
+            "face_id": "anna",
+            "type": "normal",
+            "next": None
+        }
 
     }
 

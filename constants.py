@@ -15,4 +15,4 @@ BLUE = (0, 0, 255)
 # キャラクター設定
 SPRITE_WIDTH = 20
 SPRITE_HEIGHT = 28
-SCALE = 3
+SCALE = 2.7

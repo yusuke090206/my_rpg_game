@@ -1,33 +1,38 @@
 # face_manager.py
 import pygame
+import os
 import image_manager
 
+# 顔グラフィックの表示サイズと位置
 FACE_SIZE = (160, 160)
+# 会話ウィンドウの右側に表示する設定（580, 280）
 FACE_POS = (580, 280)
 
-# 現在表示中の画像オブジェクトを保持
-_current_img = None
+# ロードした画像を保持する辞書
+_faces = {}
 
 def init():
   """
-  image_manager を初期化して顔グラフィックをロードし、
-  最初の顔をセットします。
+  image_manager を初期化し、すべてのキャラクターの顔グラフィックを
+  あらかじめ FACE_SIZE にリサイズして辞書に保持します。
   """
-  image_manager.init()  # ここで顔グラフィック（face_main.png等）をロード
-  set_face("main")      # 最初は主人公の顔を表示するよう予約
+  image_manager.init()
 
-def set_face(char_name):
-  """
-  引数に 'main', 'john', 'anna' などを渡すと顔を切り替えます
-  """
-  global _current_img
-  # image_manager が保持している辞書から画像を取得
-  raw_img = image_manager.get(f"{char_name}_face")
-  if raw_img:
-    _current_img = pygame.transform.scale(raw_img, FACE_SIZE)
-  else:
-    _current_img = None
+  # 登録したいキャラクター名のリスト
+  char_names = ["main", "john", "monika", "anna"]
 
-def draw(screen):
-  if _current_img:
-    screen.blit(_current_img, FACE_POS)
+  for name in char_names:
+    # image_manager から元画像を取得 (例: john_face)
+    raw_img = image_manager.get(f"{name}_face")
+    if raw_img:
+      # あらかじめリサイズして保存（描画時の負荷を減らす）
+      _faces[name] = pygame.transform.scale(raw_img, FACE_SIZE)
+    else:
+      print(f"Warning: {name}_face の読み込みに失敗しました。")
+
+def draw(screen, face_id):
+  """
+  main.py から渡された face_id に基づいて顔を表示します。
+  """
+  if face_id in _faces:
+    screen.blit(_faces[face_id], FACE_POS)
