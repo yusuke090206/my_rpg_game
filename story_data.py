@@ -133,7 +133,16 @@ class StoryManager:
     self.text_index = 0
     self.items = []
 
+  # story_data.py の 135行目付近
+
   def get_current_scene_data(self):
+      # もし current_scene が空、または scenes に存在しない名前なら
+    if not self.current_scene or self.current_scene not in self.scenes:
+      # 安全のために最初のシーンを返す、もしくはダミーを返す
+      print(
+          f"Warning: Scene '{self.current_scene}' not found. Redirecting to start.")
+      self.current_scene = "start_scene"
+
     return self.scenes[self.current_scene]
 
   def get_current_text(self):

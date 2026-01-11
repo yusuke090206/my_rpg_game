@@ -40,7 +40,6 @@ DATA = {
             "name": "モニカ",
             "char_id": "monika",  # これを追加
             "rect": (350, 200, 50, 80),
-            "target_scene": "npc_guard",
         },
 
     ]

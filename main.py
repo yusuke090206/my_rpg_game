@@ -122,6 +122,8 @@ while True:
 
     if game_state == "TITLE":
       if event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
+        story.current_scene = "start_scene"
+        story.text_index = 0
         game_state = "DIALOGUE"
         visible_char_count = 0
 
