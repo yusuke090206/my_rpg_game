@@ -91,7 +91,7 @@ def draw_dialogue_ui():
   display_text = full_text[:visible_char_count]
 
   # 顔があるときは右にずらす(220px)、ないときは(60px)
-  text_x = 220 if face_id else 60
+  text_x = 60 if face_id else 60
   line_limit = 20 if face_id else 25
 
   lines = [display_text[i:i + line_limit]
