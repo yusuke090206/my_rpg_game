@@ -139,10 +139,12 @@ class StoryManager:
       # もし current_scene が空、または scenes に存在しない名前なら
     if not self.current_scene or self.current_scene not in self.scenes:
       # 安全のために最初のシーンを返す、もしくはダミーを返す
-      print(
-          f"Warning: Scene '{self.current_scene}' not found. Redirecting to start.")
-      self.current_scene = "start_scene"
-
+      return {
+          "text": ["（ここには特に何もなさそうだ……）"],
+          "face_id": None,
+          "type": "normal",
+          "next": None
+      }
     return self.scenes[self.current_scene]
 
   def get_current_text(self):

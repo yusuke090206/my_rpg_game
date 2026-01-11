@@ -33,7 +33,7 @@ DATA = {
             "name": "アンナ",
             "char_id": "anna",  # これを追加
             "rect": (316, 214, 50, 80),
-            "target_scene": "npc_guard",
+            "target_scene": "npc_stranger",
             "direction": 2  # 0:下, 1:左, 2:右, 3:上
         },
         {

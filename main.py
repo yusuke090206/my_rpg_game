@@ -167,11 +167,13 @@ while True:
           check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
           check_y = player_pos[1] + (c.SPRITE_HEIGHT * c.SCALE) * 0.9
           obj = maps.get_object_at(check_x, check_y)
-          if obj:
+          if obj and obj.get("target_scene"):
             story.current_scene = obj["target_scene"]
             story.text_index = 0
             game_state = "DIALOGUE"
             visible_char_count = 0
+          else:
+            pass
 
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
