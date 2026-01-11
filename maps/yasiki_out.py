@@ -25,7 +25,7 @@ DATA = {
          },
         {
             "name": "ジョン",
-            "char_id": "jhon",  # これを追加
+            "char_id": "john",  # これを追加
             "rect": (250, 314, 50, 80),
             "target_scene": "npc_guard"
         },
@@ -40,7 +40,7 @@ DATA = {
             "name": "モニカ",
             "char_id": "monika",  # これを追加
             "rect": (350, 200, 50, 80),
-            "target_scene": ""
+            "target_scene": "npc_guard",
         },
 
     ]

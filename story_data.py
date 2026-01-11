@@ -7,7 +7,7 @@ class StoryManager:
                 "少し昔のとある世界のとある街。",
                 "あなたは５年前事故で記憶を失ってしまい生き別れた妻を探すために探偵業を始めた。",
             ],
-            "show_face": None,
+            "face_id": "main",
             "type": "normal",
             "next": "intro"
         },
@@ -21,7 +21,7 @@ class StoryManager:
                 "報酬は前払いされているけど",
                 "受けるも受けないもあなた次第…か",
             ],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": "choice_scene"
         },
@@ -33,14 +33,14 @@ class StoryManager:
         "accept": {
             "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。"],
             "type": "normal",
-            "show_face": True,
+            "face_id": "main",
             "next": None
         },
         "stay": {
             "text": ["怪しい依頼は断ろう。この依頼は受けない。"],
             "type": "normal",
             "next": None,
-            "show_face": True,
+            "face_id": "main",
             "is_ending": True,
         },
 
@@ -49,27 +49,27 @@ class StoryManager:
                 "机の上に、一枚の写真が置かれている。",
                 "妻との写真だ…。",
             ],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": "photo_choice",
             "is_ending": False
         },
         "photo_choice": {
             "text": ["この写真を持っていきますか？"],
-            "show_face": False,
+            "face_id": "main",
             "type": "choice",
             "choices": {"Y": "get_photo", "N": "leave_photo"}
         },
         "get_photo": {
             "text": ["何か妻の手がかりがあるかもしれないしな。持っていこう。"],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": None,
             "give_item": "夫婦写真"
         },
         "leave_photo": {
             "text": ["今回は必要ないだろう"],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": None
         },
@@ -81,7 +81,7 @@ class StoryManager:
                 "もぐもぐ…おいしい!",
                 "でもこの味…どこかで食べたことある気がするな。",
             ],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": None,
             "give_item": "懐かしいパン"
@@ -90,20 +90,20 @@ class StoryManager:
             "text": [
                 "こんなところに指輪の落とし物だ。一度持っていこうか？"
             ],
-            "show_face": False,
+            "face_id": "main",
             "type": "choice",
             "choices": {"Y": "get_ring", "N": "leave_ring"}
         },
         "get_ring": {
             "text": ["こんなところに指輪がある。後で持ち主を探そう。"],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": None,
             "give_item": "指輪"
         },
         "leave_ring": {
             "text": ["指輪はそのままにしておこう。"],
-            "show_face": True,
+            "face_id": "main",
             "type": "normal",
             "next": None
         },
