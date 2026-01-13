@@ -16,7 +16,7 @@ DATA = {
         [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
     ],
     "exits": [
-        {"rect": (320, 380, 100, 150), "target": "mansion_inside"}
+        {"rect": (320, 380, 150, 150), "target": "mansion_inside"}
     ],
     "objects": [
         {
