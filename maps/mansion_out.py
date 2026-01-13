@@ -43,6 +43,11 @@ DATA = {
             "char_id": "monika",  # これを追加
             "rect": (350, 200, 50, 80),
         },
+        {
+            "name": "花",
+            "rect": (530, 310, 50, 50),
+            "target_scene": "mansion_flower"
+        }
 
     ]
 }

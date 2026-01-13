@@ -16,7 +16,7 @@ DATA = {
         [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
     ],
     "exits": [
-        {"rect": (0, 560, 800, 40), "target": "yasiki_out"},
+        {"rect": (0, 560, 800, 40), "target": "mansion_out"},
         {"rect": (400, 0, 800, 40), "target": "town"},
     ],
     "objects": [

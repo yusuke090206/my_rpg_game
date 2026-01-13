@@ -95,7 +95,8 @@ class StoryManager:
             "choices": {"Y": "get_ring", "N": "leave_ring"}
         },
         "get_ring": {
-            "text": ["こんなところに指輪がある。後で持ち主を探そう。"],
+            "text": ["こんなところに指輪がある。後で持ち主を探そう。",
+                     "彼女にも似たような指輪をあげたような気がするな"],
             "face_id": "main",
             "type": "normal",
             "next": None,
@@ -160,6 +161,18 @@ class StoryManager:
             "type": "normal",
             "next": None,
             "is_door_open": True  # 扉が開いたことを示す目印（任意）
+        },
+        "mansion_flower": {
+            "text": [
+                "この花は…",
+                "彼女が好きだった花だ。摘んでいこう。",
+                "……？",
+                "なんだか彼女についての記憶が戻ってきた気がする。",
+            ],
+            "face_id": "main",
+            "type": "normal",
+            "next": None,
+            "give_item": "美しい花"
         },
 
     }
