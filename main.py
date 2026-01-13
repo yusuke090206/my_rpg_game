@@ -121,38 +121,75 @@ while True:
         full_text = story.get_current_text()
         is_typing = visible_char_count < len(full_text)
 
-        if scene["type"] == "choice":
-          if is_typing:
-            visible_char_count = len(full_text)
-          else:
-            if event.key == pygame.K_y:
-              story.current_scene = scene["choices"]["Y"]; story.text_index = 0
-              visible_char_count = 0
-            elif event.key == pygame.K_n:
-              story.current_scene = scene["choices"]["N"]; story.text_index = 0
-              visible_char_count = 0
+    elif game_state == "PAUSE":
+      # 1. 半透明の黒い背景
+      overlay = pygame.Surface(
+          (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.SRCALPHA)
+      overlay.fill((0, 0, 0, 150))  # 最後の数字が透明度(0-255)
+      screen.blit(overlay, (0, 0))
+      # 2. メニューの枠
+      menu_rect = pygame.Rect(c.SCREEN_WIDTH // 2 - 150,
+                              c.SCREEN_HEIGHT // 2 - 100, 300, 200)
+      pygame.draw.rect(screen, (30, 30, 30), menu_rect)
+      pygame.draw.rect(screen, (255, 255, 255), menu_rect, 3)
 
-        elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
-          if is_typing:
-            visible_char_count = len(full_text)
-          else:
-            item_name = scene.get("give_item")
-            if item_name and item_name not in story.items:
-              story.items.append(item_name)
+      # 3. テキスト表示
+      # 見出し
+      title_text = font_title.render("PAUSE", True, c.WHITE)
+      screen.blit(title_text, (c.SCREEN_WIDTH // 2 -
+                               title_text.get_width() // 2, menu_rect.y + 20))
 
-            # 会話の進行
-            current_scene_id = story.current_scene  # 判定用に保存
-            if not story.next_step():
-              # 【追加】会話終了後のイベント判定
-              if current_scene_id == "door_open":
-                maps.load_map("mansion_inside")
-                player_pos = list(maps.get_spawn_pos())
+      # 操作説明
+      info_font = get_font(24)  # 少し小さめのフォント
 
-              if scene.get("is_ending", False):
-                game_state = "ENDING"
-              else:
-                game_state = "EXPLORING"
+      txt_resume = info_font.render("[ESC] ゲームに戻る", True, c.WHITE)
+      txt_title = info_font.render("[ T ] タイトルへ", True, c.WHITE)
+      txt_quit = info_font.render("[ Q ] 終了する", True, c.RED)  # 終了は赤色で警告
+
+      # 中央揃えで配置
+      center_x = c.SCREEN_WIDTH // 2
+      start_y = menu_rect.y + 80
+
+      screen.blit(
+          txt_resume, (center_x - txt_resume.get_width() // 2, start_y))
+      screen.blit(
+          txt_title, (center_x - txt_title.get_width() // 2, start_y + 40))
+      screen.blit(
+          txt_quit, (center_x - txt_quit.get_width() // 2, start_y + 80))
+      # ▲▲▲ ▲▲▲ ▲▲▲
+
+      if scene["type"] == "choice":
+        if is_typing:
+          visible_char_count = len(full_text)
+        else:
+          if event.key == pygame.K_y:
+            story.current_scene = scene["choices"]["Y"]; story.text_index = 0
             visible_char_count = 0
+          elif event.key == pygame.K_n:
+            story.current_scene = scene["choices"]["N"]; story.text_index = 0
+            visible_char_count = 0
+
+      elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
+        if is_typing:
+          visible_char_count = len(full_text)
+        else:
+          item_name = scene.get("give_item")
+          if item_name and item_name not in story.items:
+            story.items.append(item_name)
+
+          # 会話の進行
+          current_scene_id = story.current_scene  # 判定用に保存
+          if not story.next_step():
+            # 【追加】会話終了後のイベント判定
+            if current_scene_id == "door_open":
+              maps.load_map("mansion_inside")
+              player_pos = list(maps.get_spawn_pos())
+
+            if scene.get("is_ending", False):
+              game_state = "ENDING"
+            else:
+              game_state = "EXPLORING"
+          visible_char_count = 0
 
     elif game_state == "EXPLORING":
       if event.type == pygame.KEYDOWN:
@@ -162,6 +199,8 @@ while True:
           check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
           check_y = player_pos[1] + (c.SPRITE_HEIGHT * c.SCALE) * 0.9
           obj = maps.get_object_at(check_x, check_y)
+        elif event.key == pygame.K_ESCAPE:
+          game_state = "PAUSE"
 
           if obj:
             target = obj.get("target_scene")
@@ -193,6 +232,19 @@ while True:
         story.current_scene = "start_scene"
         story.text_index = 0
         visible_char_count = 0
+    elif game_state == "PAUSE":
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+          # ゲームに戻る
+          game_state = "EXPLORING"
+        elif event.key == pygame.K_t:
+          # タイトルに戻る
+          game_state = "TITLE"
+          # 必要ならここでBGMを止めたり変数をリセットしたりする
+        elif event.key == pygame.K_q:
+          # ゲーム終了
+          pygame.quit()
+          sys.exit()
 
   # --- 移動・マップ処理 ---
   if game_state == "EXPLORING":
