@@ -233,6 +233,7 @@ while True:
     screen.blit(restart_text, (c.SCREEN_WIDTH // 2 - 100, 500))
   else:
     maps.draw(screen)
+    debug_tool.draw_debug_info(screen, maps)
     debug_tool.draw_grid(screen)
 
     current_objects = maps.all_maps[maps.current_map_key].get("objects", [])

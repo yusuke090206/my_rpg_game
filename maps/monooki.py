@@ -2,7 +2,7 @@ import constants as c
 
 DATA = {
     "img_path": "monooki.png",
-    "spawn_pos": [400, 300],
+    "spawn_pos": [300, 300],
     "collision": [
         [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1],
         [1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0],
@@ -16,7 +16,7 @@ DATA = {
         [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
     ],
     "exits": [
-        {"rect": (340, 350, 200, 10), "target": "mansion_inside"}
+        {"rect": (320, 380, 100, 150), "target": "mansion_inside"}
     ],
     "objects": [
         {
