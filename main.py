@@ -39,18 +39,15 @@ face_manager.init()
 def get_image(sheet, frame_x, frame_y, width, height, scale):
   image = pygame.Surface((width, height), pygame.SRCALPHA)
   image.blit(sheet, (0, 0), (frame_x * width,
-                             frame_y * height, width, height))
+             frame_y * height, width, height))
   return pygame.transform.scale(image, (int(width * scale), int(height * scale)))
 
-# 【更新】NPCとプレイヤーの画像読み込み
 base_dir = os.path.dirname(os.path.abspath(__file__))
 npc_sheets = {}
 try:
-  # メインキャラ
   chara_path = os.path.join(base_dir, "assets", "images", "main_chara.png")
   sprite_sheet = pygame.image.load(chara_path).convert_alpha()
   HAS_IMAGE = True
-  # NPC 3人
   for name in ["john", "monika", "anna"]:
     path = os.path.join(base_dir, "assets", "images", f"{name}_chara.png")
     npc_sheets[name] = pygame.image.load(path).convert_alpha()
@@ -65,38 +62,31 @@ player_speed = 4
 direction = 0
 frame = 1
 anim_timer = 0
-
 text_timer = 0
 visible_char_count = 0
 text_speed = 2
 
-# 【更新】ダイアログ描画関数（face_id対応）
+# ダイアログ描画関数
 def draw_dialogue_ui():
   global visible_char_count
   scene_data = story.get_current_scene_data()
-  # face_id があるか確認
   face_id = scene_data.get("face_id")
 
-  # ダイアログ枠
   box_rect = pygame.Rect(40, 420, 720, 150)
   pygame.draw.rect(screen, (20, 20, 20), box_rect)
   pygame.draw.rect(screen, c.WHITE, box_rect, 2)
 
-  # 顔表示（IDを渡して描画）
   if face_id:
     face_manager.draw(screen, face_id)
 
-  # テキスト表示
   full_text = story.get_current_text()
   display_text = full_text[:visible_char_count]
 
-  # 顔があるときは右にずらす(220px)、ないときは(60px)
   text_x = 60 if face_id else 60
-  line_limit = 20 if face_id else 25
+  line_limit = 25 if face_id else 25
 
   lines = [display_text[i:i + line_limit]
            for i in range(0, len(display_text), line_limit)]
-
   for i, line in enumerate(lines):
     txt_surf = font_main.render(line, True, c.WHITE)
     screen.blit(txt_surf, (text_x, 445 + i * 30))
@@ -108,14 +98,12 @@ def draw_dialogue_ui():
 
 # --- 4. メインループ ---
 while True:
-  # --- A. 更新処理 (Update) ---
   if game_state == "DIALOGUE":
     text_timer += 1
     if text_timer >= text_speed:
       visible_char_count += 1
       text_timer = 0
 
-  # --- B. イベント処理 (Events) ---
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       pygame.quit(); sys.exit()
@@ -151,7 +139,15 @@ while True:
             item_name = scene.get("give_item")
             if item_name and item_name not in story.items:
               story.items.append(item_name)
+
+            # 会話の進行
+            current_scene_id = story.current_scene  # 判定用に保存
             if not story.next_step():
+              # 【追加】会話終了後のイベント判定
+              if current_scene_id == "door_open":
+                maps.load_map("mansion_inside")
+                player_pos = list(maps.get_spawn_pos())
+
               if scene.get("is_ending", False):
                 game_state = "ENDING"
               else:
@@ -162,18 +158,30 @@ while True:
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_e:
           game_state = "INVENTORY"
-        elif event.key == pygame.K_f:  # Fキーで調査
-          # 足元の判定（SCALEに合わせて調整）
+        elif event.key == pygame.K_f:
           check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
           check_y = player_pos[1] + (c.SPRITE_HEIGHT * c.SCALE) * 0.9
           obj = maps.get_object_at(check_x, check_y)
-          if obj and obj.get("target_scene"):
-            story.current_scene = obj["target_scene"]
-            story.text_index = 0
-            game_state = "DIALOGUE"
-            visible_char_count = 0
-          else:
-            pass
+
+          if obj:
+            target = obj.get("target_scene")
+            # --- 【追加】アンナと鍵の条件分岐 ---
+            if obj.get("char_id") == "anna":
+              if "古びた鍵" in story.items:
+                target = "anna_after"
+              else:
+                target = "npc_anna"
+            # --- 【追加】扉と鍵の条件分岐 ---
+            elif target == "door_locked":
+              print(f"現在の所持品: {story.items}")
+              if "古びた鍵" in story.items:
+                target = "door_open"
+
+            if target:
+              story.current_scene = target
+              story.text_index = 0
+              game_state = "DIALOGUE"
+              visible_char_count = 0
 
     elif game_state == "INVENTORY":
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
@@ -186,25 +194,21 @@ while True:
         story.text_index = 0
         visible_char_count = 0
 
-  # --- C. 移動・マップ処理 (Logic) ---
+  # --- 移動・マップ処理 ---
   if game_state == "EXPLORING":
     keys = pygame.key.get_pressed()
     nx, ny = player_pos[0], player_pos[1]
     moving = False
-
-    # 移動
     if keys[pygame.K_a]: nx -= player_speed; direction = 1; moving = True
     elif keys[pygame.K_d]: nx += player_speed; direction = 2; moving = True
     elif keys[pygame.K_w]: ny -= player_speed; direction = 3; moving = True
     elif keys[pygame.K_s]: ny += player_speed; direction = 0; moving = True
 
-    # 当たり判定（足元2点で判定）
     f_w = (c.SPRITE_WIDTH * c.SCALE)
     f_h = (c.SPRITE_HEIGHT * c.SCALE)
     if not maps.is_wall(nx + f_w * 0.3, ny + f_h * 0.9) and not maps.is_wall(nx + f_w * 0.7, ny + f_h * 0.9):
       player_pos = [nx, ny]
 
-    # マップ移動
     target_map = maps.check_transition(
         player_pos[0] + f_w / 2, player_pos[1] + f_h * 0.9)
     if target_map and target_map in maps.all_maps:
@@ -216,7 +220,7 @@ while True:
       if anim_timer >= 10: frame = (frame + 1) % 3; anim_timer = 0
     else: frame = 1
 
-  # --- D. 描画処理 (Draw) ---
+  # --- 描画処理 ---
   if game_state == "TITLE":
     title_ui.draw(screen)
   elif game_state == "ENDING":
@@ -231,20 +235,15 @@ while True:
     maps.draw(screen)
     debug_tool.draw_grid(screen)
 
-    # 【追加】NPCの描画
     current_objects = maps.all_maps[maps.current_map_key].get("objects", [])
     for obj in current_objects:
       cid = obj.get("char_id")
       if cid in npc_sheets:
-        npc_img = get_image(
-            npc_sheets[cid], 1, 0, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
         npc_dir = obj.get("direction", 0)
-        # 取得した向き (npc_dir) を使って画像を取得
         npc_img = get_image(
             npc_sheets[cid], 1, npc_dir, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
         screen.blit(npc_img, (obj["rect"][0], obj["rect"][1]))
 
-    # プレイヤー
     if HAS_IMAGE:
       curr_s = get_image(sprite_sheet, frame, direction,
                          c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
@@ -253,13 +252,11 @@ while True:
       pygame.draw.rect(
           screen, c.BLUE, (player_pos[0], player_pos[1], 40, 80))
 
-    # UI
     if game_state == "DIALOGUE":
       draw_dialogue_ui()
     elif game_state == "INVENTORY":
       inventory_ui.draw(screen, story.items)
 
-    # 座標表示
     pos_text = f"X: {int(player_pos[0])} Y: {int(player_pos[1])}"
     pos_surf = font_main.render(pos_text, True, (255, 255, 0))
     screen.blit(pos_surf, (c.SCREEN_WIDTH - pos_surf.get_width() - 20, 20))

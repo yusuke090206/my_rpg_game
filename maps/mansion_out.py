@@ -19,10 +19,12 @@ DATA = {
         {"rect": (0, 560, 800, 40), "target": "forest"},
     ],
     "objects": [
-        {"name": "",
-         "rect": (400, 250, 100, 64),
-         "target_scene": ""  # 調べた時に飛ぶシーン名
-         },
+        {
+            "name": "屋敷の扉",
+            "char_id": None,
+            "rect": (380, 180, 100, 100),  # 屋敷の入り口の座標に合わせて調整してください
+            "target_scene": "door_locked"
+        },
         {
             "name": "ジョン",
             "char_id": "john",  # これを追加
@@ -33,7 +35,7 @@ DATA = {
             "name": "アンナ",
             "char_id": "anna",  # これを追加
             "rect": (316, 214, 50, 80),
-            "target_scene": "npc_stranger",
+            "target_scene": "npc_anna",
             "direction": 2  # 0:下, 1:左, 2:右, 3:上
         },
         {

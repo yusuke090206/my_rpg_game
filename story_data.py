@@ -7,7 +7,7 @@ class StoryManager:
                 "少し昔のとある世界のとある街。",
                 "あなたは５年前事故で記憶を失ってしまい生き別れた妻を探すために探偵業を始めた。",
             ],
-            "face_id": "main",
+            "face_id": None,
             "type": "normal",
             "next": "intro"
         },
@@ -26,7 +26,7 @@ class StoryManager:
             "next": "choice_scene"
         },
         "choice_scene": {
-            "text": ["この依頼、引き受けて屋敷へ向かうか？"],
+            "text": ["この依頼、引き受けようか？"],
             "type": "choice",
             "choices": {"Y": "accept", "N": "stay"}
         },
@@ -114,18 +114,53 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
-        "npc_gardener": {  # これをモニカ（庭師）にします
-            "text": ["モニカ：この屋敷のバラは、主人の誇りでしてね。", "……おや、あんた、どこかで見た顔だな？"],
-            "face_id": "monika",
+        "npc_anna": {  # これをアンナにします
+            "text": [
+                "あなたも屋敷の調査に来たの？",
+                "あたしはアンナ。よろしくね。",
+                "その子はモニカっていうらしいわ。",
+            ],
+            "face_id": "anna",  # face_managerに登録した名前
             "type": "normal",
+            "next": "monika_intro"
+        },
+        "monika_intro": {
+            "text": [
+                "お、おねがします。",
+            ],
+            "face_id": "monika",  # face_managerに登録した名前
+            "type": "normal",
+            "next": "anna_give_key"
+        },
+        "anna_give_key": {
+            "text": [
+                "鍵がいるんでしょ？",
+                "これ、使って。"
+            ],
+            "face_id": "anna",
+            "type": "normal",
+            "give_item": "古びた鍵",  # main.pyの既存機能で追加されます
             "next": None
         },
-        "npc_stranger": {  # これをアンナ（怪しい女）にします
-            "text": ["アンナ：フフフ……。あんたも『真実』を探しに来たのかい？", "あの中には、触れてはならぬ過去が眠っておるぞ。"],
+        "anna_after": {
+            "text": ["何？鍵はあげたでしょ？行くなら行きましょ。"],
             "face_id": "anna",
             "type": "normal",
             "next": None
-        }
+        },
+        "door_locked": {
+            "text": ["（扉は固く閉ざされている。鍵が必要なようだ……。）"],
+            "face_id": None,
+            "type": "normal",
+            "next": None
+        },
+        "door_open": {
+            "text": ["（鍵を使った！ 扉が開いた。）"],
+            "face_id": None,
+            "type": "normal",
+            "next": None,
+            "is_door_open": True  # 扉が開いたことを示す目印（任意）
+        },
 
     }
 
