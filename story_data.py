@@ -174,6 +174,16 @@ class StoryManager:
             "next": None,
             "give_item": "美しい花"
         },
+        "pistol": {
+            "text": [
+                "こんなところに拳銃？",
+                "必要になることがあるかもしれない。持っていこう。",
+            ],  
+            "face_id": "main",
+            "type": "normal", 
+            "next": None,
+            "give_item": " 新しい拳銃"
+        },
 
     }
 

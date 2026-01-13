@@ -45,7 +45,7 @@ DATA = {
         },
         {
             "name": "花",
-            "rect": (530, 310, 50, 50),
+            "rect": (530, 310, -50, -50),
             "target_scene": "mansion_flower"
         }
 
