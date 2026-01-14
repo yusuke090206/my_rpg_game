@@ -110,8 +110,21 @@ class StoryManager:
         },
         # --- story_data.py 50行目付近 ---
         "npc_guard": {  # これをジョン（門番）にします
-            "text": ["ジョン：貴様、何用だ。ここは許可なき者は通さん。", "（……厳重に警備されているようだ）"],
+            "text": ["あんたも屋敷の調査に来たのか？",
+                     "俺はジョン。よろしくな。",
+                     "鍵が欲しいなら、あの娘らに頼んでみるといいぞ。",
+                     "中に入ったら左下の部屋から順に反時計回りに見てみるといい。",
+                     "そして最後に右下の部屋を見ればいい。",
+                     "俺はまだ庭を見て回るからな。",
+                     "中から出てこなかった連中もいる気をつけろよ。",
+                     ],
             "face_id": "john",  # face_managerに登録した名前
+            "type": "normal",
+            "next": "john_after"
+        },
+        "john_after": {
+            "text": ["ありがとうございます",],
+            "face_id": "main",
             "type": "normal",
             "next": None
         },
@@ -207,6 +220,42 @@ class StoryManager:
             "next": None,
             "give_item": "楽譜"
         },
+        "john_inside": {
+            "text": [
+                "この先は荷物があって通れないみたいだ。",
+                "おとなしく４つの部屋を調べよう。"
+            ],
+            "face_id": "john",
+            "type": "normal",
+            "next": None
+        },
+        "anna_inside": {
+            "text": [
+                "思ってたより広いのね…",
+                "あたし、頑張って調べてみるわ。",
+                "あんたもこの隣の部屋から順に調べていくのよ。"
+            ],
+            "face_id": "anna",
+            "type": "normal",
+            "next": None
+        },
+        "monika_inside": {
+            "text": [
+                "役に立たないけど…が、頑張ります",
+            ],
+            "face_id": "monika",
+            "type": "normal",
+            "next": "monika_after"
+        },
+        "monika_after": {
+            "text": [
+                "うん。気を付けてね。",
+            ],
+            "face_id": "main",
+            "type": "normal",
+            "next": None
+        },
+
 
     }
 

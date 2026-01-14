@@ -25,9 +25,22 @@ DATA = {
     ],
     "objects": [
         {
-            "name": "",
-            "rect": (400, 250, 100, 64),
-            "target_scene": ""  # 調べた時に飛ぶシーン名
+            "name": "家の中のアンナ",
+            "rect": (52, 398, 100, 64),
+            "target_scene": "anna_inside",  # 調べた時に飛ぶシーン名
+            "direction": 1,  # 0:下, 1:左, 2:右, 3:上
+        },
+        {
+            "name": "家の中のモニカ",
+            "rect": (228, 318, 100, 64),
+            "target_scene": "monika_inside",  # 調べた時に飛ぶシーン名
+            "direction": 3,  # 0:下, 1:左, 2:右, 3:上
+        },
+        {
+            "name": "家の中のジョン",
+            "rect": (376, 62, 100, 64),
+            "target_scene": "john_inside",  # 調べた時に飛ぶシーン名
+            "direction": 0,  # 0:下, 1:左, 2:右, 3:上
         }
     ]
 }
