@@ -7,7 +7,6 @@ from story_data import StoryManager
 from title_screen import TitleScreen
 from inventory import InventoryUI
 import face_manager
-import debug_tool
 
 # --- 1. 初期化 ---
 pygame.init()
@@ -109,10 +108,8 @@ while True:
       text_timer = 0
 
     # ▼▼▼ 5つのエンディング分岐開始処理 ▼▼▼
-    # ここは「エンディングの会話シーンを開始させる」ための処理
     def check_items_complete():
       required_items = ["夫婦写真", "懐かしいパン", "指輪", "美しい花", "同じ夫婦写真", "楽譜"]
-      # 全て持っているかチェック
       for item in required_items:
         if item not in story.items:
           return False
@@ -191,23 +188,16 @@ while True:
               story.items.append(item_name)
 
             # 次へ進む
-            # ここで現在のシーンIDを覚えておく（会話が終わった瞬間の判定に使うため）
             last_scene_id = story.current_scene
 
             if not story.next_step():
-              # ▼▼▼ 修正ポイント：会話終了時の遷移処理 ▼▼▼
-              # シーンIDに含まれる文字で判定
-
               if "door_open" in last_scene_id:
                 maps.load_map("mansion_inside")
                 player_pos = list(maps.get_spawn_pos())
                 game_state = "EXPLORING"
 
-              # ▼ ENDING_0 (拒否エンド) の判定を追加
               elif "end_0" in last_scene_id:
                 game_state = "ENDING_0"
-
-              # エンディング分岐 (1~5)
               elif "end_1" in last_scene_id:
                 game_state = "ENDING_1"
               elif "end_2" in last_scene_id:
@@ -218,11 +208,8 @@ while True:
                 game_state = "ENDING_4"
               elif "end_5" in last_scene_id:
                 game_state = "ENDING_5"
-
               else:
-                # エンディングでなければ探索へ戻る
                 game_state = "EXPLORING"
-              # ▲▲▲ 修正ポイントここまで ▲▲▲
 
             visible_char_count = 0
 
@@ -317,7 +304,6 @@ while True:
   if game_state == "TITLE":
     title_ui.draw(screen)
 
-  # ▼▼▼ 修正ポイント：エンディングごとの描画 ▼▼▼
   elif game_state == "ENDING_0":
     screen.fill((0, 0, 0))  # 黒
     title_surf = font_huge.render("GAME OVER", True, (100, 100, 100))
@@ -367,7 +353,6 @@ while True:
     restart_text = font_main.render(
         "Press R to Title", True, (200, 200, 200))
     screen.blit(restart_text, (350, 500))
-  # ▲▲▲ 描画処理ここまで ▲▲▲
 
   else:
     # 暗転演出 (銃殺エンドの会話中のみ)
@@ -376,8 +361,7 @@ while True:
     else:
       # 通常描画
       maps.draw(screen)
-      debug_tool.draw_debug_info(screen, maps)
-      debug_tool.draw_grid(screen)
+      # ▼ debug_tool 関連の描画を削除しました ▼
       for obj in maps.all_maps[maps.current_map_key].get("objects", []):
         cid = obj.get("char_id")
         if cid in npc_sheets:
@@ -418,10 +402,7 @@ while True:
           txt_title_p, (cx - txt_title_p.get_width() // 2, sy + 40))
       screen.blit(txt_quit, (cx - txt_quit.get_width() // 2, sy + 80))
 
-    # 座標表示
-    pos_surf = font_main.render(
-        f"X: {int(player_pos[0])} Y: {int(player_pos[1])}", True, (255, 255, 0))
-    screen.blit(pos_surf, (c.SCREEN_WIDTH - pos_surf.get_width() - 20, 20))
+    # ▼ 座標表示 (X: Y:) も削除しました ▼
 
   pygame.display.flip()
   clock.tick(c.FPS)
