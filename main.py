@@ -1,13 +1,13 @@
 import pygame
 import sys
 import os
+import asyncio  # 追加: Web動作に必須
 import constants as c
 from map_manager import MapManager
 from story_data import StoryManager
 from title_screen import TitleScreen
 from inventory import InventoryUI
 import face_manager
-import debug_tool
 
 # --- 1. 初期化 ---
 pygame.init()
@@ -29,7 +29,7 @@ def get_font(size, bold=False):
 
 font_main = get_font(24)
 font_title = get_font(48, bold=True)
-font_huge = get_font(64, bold=True)  # エンディング用の特大フォント
+font_huge = get_font(64, bold=True)
 
 # --- 2. 管理クラスの初期化 ---
 story = StoryManager()
@@ -55,6 +55,7 @@ try:
     path = os.path.join(base_dir, "assets", "images", f"{name}_chara.png")
     npc_sheets[name] = pygame.image.load(path).convert_alpha()
 except Exception as e:
+  # Web版ではコンソールが見えないためprintはデバッグ用
   print(f"画像読み込みエラー: {e}")
   HAS_IMAGE = False
 
@@ -85,7 +86,7 @@ def draw_dialogue_ui():
   full_text = story.get_current_text()
   display_text = full_text[:visible_char_count]
 
-  text_x = 160 if face_id else 60  # 顔があるときはテキストを右にずらす
+  text_x = 160 if face_id else 60
   line_limit = 25
 
   lines = [display_text[i:i + line_limit]
@@ -99,329 +100,271 @@ def draw_dialogue_ui():
     g_surf = font_main.render(guide, True, (180, 180, 180))
     screen.blit(g_surf, (60, 535))
 
-# --- 4. メインループ ---
-while True:
-  # 会話中の文字送りタイマー
-  if game_state == "DIALOGUE":
-    text_timer += 1
-    if text_timer >= text_speed:
-      visible_char_count += 1
-      text_timer = 0
+# --- 4. メインループ (async関数化) ---
+async def main():
+  global game_state, player_pos, direction, frame, anim_timer, text_timer, visible_char_count
 
-    # ▼▼▼ 5つのエンディング分岐開始処理 ▼▼▼
-    # ここは「エンディングの会話シーンを開始させる」ための処理
-    def check_items_complete():
-      required_items = ["夫婦写真", "懐かしいパン", "指輪", "美しい花", "同じ夫婦写真", "楽譜"]
-      # 全て持っているかチェック
-      for item in required_items:
-        if item not in story.items:
-          return False
-      return True
+  while True:
+    # 会話中の文字送りタイマー
+    if game_state == "DIALOGUE":
+      text_timer += 1
+      if text_timer >= text_speed:
+        visible_char_count += 1
+        text_timer = 0
 
-    current = story.current_scene
-    target_scene = None
+      # エンディング分岐処理
+      def check_items_complete():
+        required_items = ["夫婦写真", "懐かしいパン",
+                          "指輪", "美しい花", "同じ夫婦写真", "楽譜"]
+        for item in required_items:
+          if item not in story.items:
+            return False
+        return True
 
-    # パターンA: 銃なし判定
-    if current == "witch_check_no_gun":
-      if check_items_complete():
-        target_scene = "end_2_pure_peace"
-      else:
-        target_scene = "end_1_bad_helpless"
+      current = story.current_scene
+      target_scene = None
 
-    # パターンB: 銃あり・撃つ(Y)
-    elif current == "witch_check_shoot":
-      if check_items_complete():
-        target_scene = "end_4_tragic_kill"
-      else:
-        target_scene = "end_3_ruthless_kill"
+      if current == "witch_check_no_gun":
+        target_scene = "end_2_pure_peace" if check_items_complete() else "end_1_bad_helpless"
+      elif current == "witch_check_shoot":
+        target_scene = "end_4_tragic_kill" if check_items_complete() else "end_3_ruthless_kill"
+      elif current == "witch_check_spare":
+        target_scene = "end_5_true_peace" if check_items_complete() else "end_1_bad_helpless"
 
-    # パターンC: 銃あり・撃たない(N)
-    elif current == "witch_check_spare":
-      if check_items_complete():
-        target_scene = "end_5_true_peace"
-      else:
-        target_scene = "end_1_bad_helpless"
-
-    if target_scene:
-      story.current_scene = target_scene
-      story.text_index = 0
-      visible_char_count = 0
-    # ▲▲▲ 分岐処理ここまで ▲▲▲
-
-  # ▼ イベント処理ループ ▼
-  for event in pygame.event.get():
-    if event.type == pygame.QUIT:
-      pygame.quit(); sys.exit()
-
-    # --- タイトル画面 ---
-    if game_state == "TITLE":
-      if event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
-        story.current_scene = "start_scene"
+      if target_scene:
+        story.current_scene = target_scene
         story.text_index = 0
-        game_state = "DIALOGUE"
         visible_char_count = 0
 
-    # --- 会話画面 ---
-    elif game_state == "DIALOGUE":
-      if event.type == pygame.KEYDOWN:
-        scene = story.get_current_scene_data()
-        full_text = story.get_current_text()
-        is_typing = visible_char_count < len(full_text)
+    # ▼ イベント処理ループ ▼
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        pygame.quit(); sys.exit()
 
-        # 選択肢
-        if scene["type"] == "choice":
-          if is_typing:
-            visible_char_count = len(full_text)
-          else:
-            if event.key == pygame.K_y:
-              story.current_scene = scene["choices"]["Y"]; story.text_index = 0
+      # --- タイトル画面 ---
+      if game_state == "TITLE":
+        if event.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]:
+          story.current_scene = "start_scene"
+          story.text_index = 0
+          game_state = "DIALOGUE"
+          visible_char_count = 0
+
+      # --- 会話画面 ---
+      elif game_state == "DIALOGUE":
+        if event.type == pygame.KEYDOWN:
+          scene = story.get_current_scene_data()
+          full_text = story.get_current_text()
+          is_typing = visible_char_count < len(full_text)
+
+          if scene["type"] == "choice":
+            if is_typing:
+              visible_char_count = len(full_text)
+            else:
+              if event.key == pygame.K_y:
+                story.current_scene = scene["choices"]["Y"]; story.text_index = 0
+                visible_char_count = 0
+              elif event.key == pygame.K_n:
+                story.current_scene = scene["choices"]["N"]; story.text_index = 0
+                visible_char_count = 0
+
+          elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
+            if is_typing:
+              visible_char_count = len(full_text)
+            else:
+              item_name = scene.get("give_item")
+              if item_name and item_name not in story.items:
+                story.items.append(item_name)
+
+              last_scene_id = story.current_scene
+              if not story.next_step():
+                if "door_open" in last_scene_id:
+                  maps.load_map("mansion_inside")
+                  player_pos = list(maps.get_spawn_pos())
+                  game_state = "EXPLORING"
+                elif "end_0" in last_scene_id: game_state = "ENDING_0"
+                elif "end_1" in last_scene_id: game_state = "ENDING_1"
+                elif "end_2" in last_scene_id: game_state = "ENDING_2"
+                elif "end_3" in last_scene_id: game_state = "ENDING_3"
+                elif "end_4" in last_scene_id: game_state = "ENDING_4"
+                elif "end_5" in last_scene_id: game_state = "ENDING_5"
+                else: game_state = "EXPLORING"
               visible_char_count = 0
-            elif event.key == pygame.K_n:
-              story.current_scene = scene["choices"]["N"]; story.text_index = 0
-              visible_char_count = 0
 
-        # 通常会話
-        elif scene["type"] == "normal" and event.key == pygame.K_SPACE:
-          if is_typing:
-            visible_char_count = len(full_text)
-          else:
-            # アイテム入手
-            item_name = scene.get("give_item")
-            if item_name and item_name not in story.items:
-              story.items.append(item_name)
+      # --- ポーズ画面 ---
+      elif game_state == "PAUSE":
+        if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_ESCAPE: game_state = "EXPLORING"
+          elif event.key == pygame.K_t: game_state = "TITLE"
+          elif event.key == pygame.K_q: pygame.quit(); sys.exit()
 
-            # 次へ進む
-            # ここで現在のシーンIDを覚えておく（会話が終わった瞬間の判定に使うため）
-            last_scene_id = story.current_scene
+      # --- 探索画面 ---
+      elif game_state == "EXPLORING":
+        if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_e: game_state = "INVENTORY"
+          elif event.key == pygame.K_ESCAPE: game_state = "PAUSE"
+          elif event.key == pygame.K_f:
+            check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
+            check_y = player_pos[1] + \
+                (c.SPRITE_HEIGHT * c.SCALE) * 0.9
+            obj = maps.get_object_at(check_x, check_y)
+            if obj:
+              target = obj.get("target_scene")
+              if obj.get("char_id") == "witch":
+                target = "witch_gun_choice" if "新式の拳銃" in story.items else "witch_check_no_gun"
+              elif obj.get("char_id") == "anna":
+                target = "anna_after" if "古びた鍵" in story.items else "npc_anna"
+              elif target == "door_locked":
+                if "古びた鍵" in story.items: target = "door_open"
 
-            if not story.next_step():
-              # ▼▼▼ 修正ポイント：会話終了時の遷移処理 ▼▼▼
-              # シーンIDに含まれる文字で判定
+              if target:
+                story.current_scene = target
+                story.text_index = 0
+                game_state = "DIALOGUE"
+                visible_char_count = 0
 
-              if "door_open" in last_scene_id:
-                maps.load_map("mansion_inside")
-                player_pos = list(maps.get_spawn_pos())
-                game_state = "EXPLORING"
-
-              # ▼ ENDING_0 (拒否エンド) の判定を追加
-              elif "end_0" in last_scene_id:
-                game_state = "ENDING_0"
-
-              # エンディング分岐 (1~5)
-              elif "end_1" in last_scene_id:
-                game_state = "ENDING_1"
-              elif "end_2" in last_scene_id:
-                game_state = "ENDING_2"
-              elif "end_3" in last_scene_id:
-                game_state = "ENDING_3"
-              elif "end_4" in last_scene_id:
-                game_state = "ENDING_4"
-              elif "end_5" in last_scene_id:
-                game_state = "ENDING_5"
-
-              else:
-                # エンディングでなければ探索へ戻る
-                game_state = "EXPLORING"
-              # ▲▲▲ 修正ポイントここまで ▲▲▲
-
-            visible_char_count = 0
-
-    # --- ポーズ画面 ---
-    elif game_state == "PAUSE":
-      if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_ESCAPE:
+      # --- インベントリ ---
+      elif game_state == "INVENTORY":
+        if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
           game_state = "EXPLORING"
-        elif event.key == pygame.K_t:
+
+      # --- エンディング画面 ---
+      elif game_state.startswith("ENDING"):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
           game_state = "TITLE"
-        elif event.key == pygame.K_q:
-          pygame.quit(); sys.exit()
+          story.current_scene = "start_scene"
+          story.text_index = 0
+          visible_char_count = 0
+          story.items = []
+          maps.load_map("town")
+          player_pos = list(maps.get_spawn_pos())
 
-    # --- 探索画面 ---
-    elif game_state == "EXPLORING":
-      if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_e:
-          game_state = "INVENTORY"
-        elif event.key == pygame.K_ESCAPE:
-          game_state = "PAUSE"
-        elif event.key == pygame.K_f:
-          check_x = player_pos[0] + (c.SPRITE_WIDTH * c.SCALE) / 2
-          check_y = player_pos[1] + (c.SPRITE_HEIGHT * c.SCALE) * 0.9
-          obj = maps.get_object_at(check_x, check_y)
-          if obj:
-            target = obj.get("target_scene")
-            # 魔女イベント入り口
-            if obj.get("char_id") == "witch":
-              if "新式の拳銃" in story.items:
-                target = "witch_gun_choice"
-              else:
-                target = "witch_check_no_gun"
-            elif obj.get("char_id") == "anna":
-              if "古びた鍵" in story.items:
-                target = "anna_after"
-              else:
-                target = "npc_anna"
-            elif target == "door_locked":
-              if "古びた鍵" in story.items:
-                target = "door_open"
+    # ▼ ゲームロジック更新 ▼
+    if game_state == "EXPLORING":
+      keys = pygame.key.get_pressed()
+      nx, ny = player_pos[0], player_pos[1]
+      moving = False
+      if keys[pygame.K_a]: nx -= player_speed; direction = 1; moving = True
+      elif keys[pygame.K_d]: nx += player_speed; direction = 2; moving = True
+      elif keys[pygame.K_w]: ny -= player_speed; direction = 3; moving = True
+      elif keys[pygame.K_s]: ny += player_speed; direction = 0; moving = True
 
-            if target:
-              story.current_scene = target
-              story.text_index = 0
-              game_state = "DIALOGUE"
-              visible_char_count = 0
+      f_w = (c.SPRITE_WIDTH * c.SCALE)
+      f_h = (c.SPRITE_HEIGHT * c.SCALE)
+      if not maps.is_wall(nx + f_w * 0.3, ny + f_h * 0.9) and not maps.is_wall(nx + f_w * 0.7, ny + f_h * 0.9):
+        player_pos = [nx, ny]
 
-    # --- インベントリ ---
-    elif game_state == "INVENTORY":
-      if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
-        game_state = "EXPLORING"
-
-    # --- エンディング画面 (共通操作) ---
-    elif game_state.startswith("ENDING"):
-      # Rキーでタイトルへ
-      if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-        game_state = "TITLE"
-        story.current_scene = "start_scene"
-        story.text_index = 0
-        visible_char_count = 0
-        story.items = []
-        maps.load_map("town")
+      target_map = maps.check_transition(
+          player_pos[0] + f_w / 2, player_pos[1] + f_h * 0.9)
+      if target_map and target_map in maps.all_maps:
+        maps.load_map(target_map)
         player_pos = list(maps.get_spawn_pos())
 
-  # ▼ ゲームロジック更新 ▼
-  if game_state == "EXPLORING":
-    keys = pygame.key.get_pressed()
-    nx, ny = player_pos[0], player_pos[1]
-    moving = False
-    if keys[pygame.K_a]: nx -= player_speed; direction = 1; moving = True
-    elif keys[pygame.K_d]: nx += player_speed; direction = 2; moving = True
-    elif keys[pygame.K_w]: ny -= player_speed; direction = 3; moving = True
-    elif keys[pygame.K_s]: ny += player_speed; direction = 0; moving = True
+      if moving:
+        anim_timer += 1
+        if anim_timer >= 10: frame = (frame + 1) % 3; anim_timer = 0
+      else: frame = 1
 
-    f_w = (c.SPRITE_WIDTH * c.SCALE)
-    f_h = (c.SPRITE_HEIGHT * c.SCALE)
-    if not maps.is_wall(nx + f_w * 0.3, ny + f_h * 0.9) and not maps.is_wall(nx + f_w * 0.7, ny + f_h * 0.9):
-      player_pos = [nx, ny]
+    # ▼ 描画処理 ▼
+    if game_state == "TITLE":
+      title_ui.draw(screen)
 
-    target_map = maps.check_transition(
-        player_pos[0] + f_w / 2, player_pos[1] + f_h * 0.9)
-    if target_map and target_map in maps.all_maps:
-      maps.load_map(target_map)
-      player_pos = list(maps.get_spawn_pos())
-
-    if moving:
-      anim_timer += 1
-      if anim_timer >= 10: frame = (frame + 1) % 3; anim_timer = 0
-    else: frame = 1
-
-  # ▼ 描画処理 ▼
-  if game_state == "TITLE":
-    title_ui.draw(screen)
-
-  # ▼▼▼ 修正ポイント：エンディングごとの描画 ▼▼▼
-  elif game_state == "ENDING_0":
-    screen.fill((0, 0, 0))  # 黒
-    title_surf = font_huge.render("GAME OVER", True, (100, 100, 100))
-    sub_surf = font_title.render("- これでよかったのか？ -", True, c.WHITE)
-    screen.blit(title_surf, (c.SCREEN_WIDTH // 2 -
-                title_surf.get_width() // 2, 200))
-    screen.blit(sub_surf, (c.SCREEN_WIDTH // 2 -
-                sub_surf.get_width() // 2, 320))
-
-  elif game_state == "ENDING_1":
-    screen.fill((50, 0, 0))  # 赤
-    title_surf = font_huge.render("BAD ENDING", True, (255, 100, 100))
-    sub_surf = font_title.render("- 真相は？ -", True, c.WHITE)
-    screen.blit(title_surf, (250, 200))
-    screen.blit(sub_surf, (280, 320))
-
-  elif game_state == "ENDING_2":
-    screen.fill((0, 20, 50))  # 青
-    title_surf = font_huge.render("TRUE ENDING A", True, (100, 255, 255))
-    sub_surf = font_title.render("- 永遠の別れ -", True, c.WHITE)
-    screen.blit(title_surf, (200, 200))
-    screen.blit(sub_surf, (300, 320))
-
-  elif game_state == "ENDING_3":
-    screen.fill((20, 20, 20))  # グレー
-    title_surf = font_huge.render("NORMAL ENDING", True, (180, 180, 180))
-    sub_surf = font_title.render("- これでお別れ？ -", True, c.WHITE)
-    screen.blit(title_surf, (200, 200))
-    screen.blit(sub_surf, (280, 320))
-
-  elif game_state == "ENDING_4":
-    screen.fill((30, 0, 30))  # 紫
-    title_surf = font_huge.render("BAD ENDING", True, (200, 100, 200))
-    sub_surf = font_title.render("- 君を愛してる -", True, c.WHITE)
-    screen.blit(title_surf, (250, 200))
-    screen.blit(sub_surf, (300, 320))
-
-  elif game_state == "ENDING_5":
-    screen.fill((80, 60, 0))  # 金/茶
-    title_surf = font_huge.render("TRUE ENDING B", True, (255, 215, 0))
-    sub_surf = font_title.render("- もう一度始めから -", True, c.WHITE)
-    screen.blit(title_surf, (200, 200))
-    screen.blit(sub_surf, (280, 320))
-
-  # エンディング共通のリスタート文字
-  if game_state.startswith("ENDING"):
-    restart_text = font_main.render(
-        "Press R to Title", True, (200, 200, 200))
-    screen.blit(restart_text, (350, 500))
-  # ▲▲▲ 描画処理ここまで ▲▲▲
-
-  else:
-    # 暗転演出 (銃殺エンドの会話中のみ)
-    if story.current_scene in ["end_3_ruthless_kill", "end_4_tragic_kill"]:
+    elif game_state == "ENDING_0":
       screen.fill((0, 0, 0))
+      title_surf = font_huge.render("GAME OVER", True, (100, 100, 100))
+      sub_surf = font_title.render("- 物語は始まらなかった -", True, c.WHITE)
+      screen.blit(title_surf, (c.SCREEN_WIDTH // 2 -
+                  title_surf.get_width() // 2, 200))
+      screen.blit(sub_surf, (c.SCREEN_WIDTH // 2 -
+                  sub_surf.get_width() // 2, 320))
+
+    elif game_state == "ENDING_1":
+      screen.fill((50, 0, 0))
+      title_surf = font_huge.render("BAD ENDING", True, (255, 100, 100))
+      sub_surf = font_title.render("- 真相は？ -", True, c.WHITE)
+      screen.blit(title_surf, (250, 200))
+      screen.blit(sub_surf, (280, 320))
+
+    elif game_state == "ENDING_2":
+      screen.fill((0, 20, 50))
+      title_surf = font_huge.render(
+          "TRUE ENDING A", True, (100, 255, 255))
+      sub_surf = font_title.render("- 永遠の別れ -", True, c.WHITE)
+      screen.blit(title_surf, (200, 200))
+      screen.blit(sub_surf, (300, 320))
+
+    elif game_state == "ENDING_3":
+      screen.fill((20, 20, 20))
+      title_surf = font_huge.render(
+          "NORMAL ENDING", True, (180, 180, 180))
+      sub_surf = font_title.render("- これでお別れ？ -", True, c.WHITE)
+      screen.blit(title_surf, (200, 200))
+      screen.blit(sub_surf, (280, 320))
+
+    elif game_state == "ENDING_4":
+      screen.fill((30, 0, 30))
+      title_surf = font_huge.render("BAD ENDING", True, (200, 100, 200))
+      sub_surf = font_title.render("- 君を愛してる -", True, c.WHITE)
+      screen.blit(title_surf, (250, 200))
+      screen.blit(sub_surf, (300, 320))
+
+    elif game_state == "ENDING_5":
+      screen.fill((80, 60, 0))
+      title_surf = font_huge.render("TRUE ENDING B", True, (255, 215, 0))
+      sub_surf = font_title.render("- もう一度始めから -", True, c.WHITE)
+      screen.blit(title_surf, (200, 200))
+      screen.blit(sub_surf, (280, 320))
+
+    if game_state.startswith("ENDING"):
+      restart_text = font_main.render(
+          "Press R to Title", True, (200, 200, 200))
+      screen.blit(restart_text, (350, 500))
+
     else:
-      # 通常描画
-      maps.draw(screen)
-      debug_tool.draw_debug_info(screen, maps)
-      debug_tool.draw_grid(screen)
-      for obj in maps.all_maps[maps.current_map_key].get("objects", []):
-        cid = obj.get("char_id")
-        if cid in npc_sheets:
-          img = get_image(npc_sheets[cid], 1, obj.get(
-              "direction", 0), c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
-          screen.blit(img, obj["rect"][:2])
-      if HAS_IMAGE:
-        screen.blit(get_image(sprite_sheet, frame, direction,
-                              c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE), player_pos)
+      if story.current_scene in ["end_3_ruthless_kill", "end_4_tragic_kill"]:
+        screen.fill((0, 0, 0))
       else:
-        pygame.draw.rect(screen, c.BLUE, (*player_pos, 40, 80))
+        maps.draw(screen)
+        for obj in maps.all_maps[maps.current_map_key].get("objects", []):
+          cid = obj.get("char_id")
+          if cid in npc_sheets:
+            img = get_image(npc_sheets[cid], 1, obj.get(
+                "direction", 0), c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
+            screen.blit(img, obj["rect"][:2])
+        if HAS_IMAGE:
+          screen.blit(get_image(sprite_sheet, frame, direction,
+                      c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE), player_pos)
+        else:
+          pygame.draw.rect(screen, c.BLUE, (*player_pos, 40, 80))
 
-    # UI描画
-    if game_state == "DIALOGUE":
-      draw_dialogue_ui()
-    elif game_state == "INVENTORY":
-      inventory_ui.draw(screen, story.items)
-    elif game_state == "PAUSE":
-      overlay = pygame.Surface(
-          (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.SRCALPHA)
-      overlay.fill((0, 0, 0, 150))
-      screen.blit(overlay, (0, 0))
-      # ...ポーズメニューの描画...
-      menu_rect = pygame.Rect(
-          c.SCREEN_WIDTH // 2 - 150, c.SCREEN_HEIGHT // 2 - 100, 300, 200)
-      pygame.draw.rect(screen, (30, 30, 30), menu_rect)
-      pygame.draw.rect(screen, (255, 255, 255), menu_rect, 3)
-      title_text = font_title.render("PAUSE", True, c.WHITE)
-      screen.blit(title_text, (c.SCREEN_WIDTH // 2 -
-                               title_text.get_width() // 2, menu_rect.y + 20))
-      txt_resume = font_main.render("[ESC] ゲームに戻る", True, c.WHITE)
-      txt_title_p = font_main.render("[ T ] タイトルへ", True, c.WHITE)
-      txt_quit = font_main.render("[ Q ] 終了する", True, c.RED)
-      cx = c.SCREEN_WIDTH // 2
-      sy = menu_rect.y + 80
-      screen.blit(txt_resume, (cx - txt_resume.get_width() // 2, sy))
-      screen.blit(
-          txt_title_p, (cx - txt_title_p.get_width() // 2, sy + 40))
-      screen.blit(txt_quit, (cx - txt_quit.get_width() // 2, sy + 80))
+      if game_state == "DIALOGUE":
+        draw_dialogue_ui()
+      elif game_state == "INVENTORY":
+        inventory_ui.draw(screen, story.items)
+      elif game_state == "PAUSE":
+        overlay = pygame.Surface(
+            (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        screen.blit(overlay, (0, 0))
+        menu_rect = pygame.Rect(
+            c.SCREEN_WIDTH // 2 - 150, c.SCREEN_HEIGHT // 2 - 100, 300, 200)
+        pygame.draw.rect(screen, (30, 30, 30), menu_rect)
+        pygame.draw.rect(screen, (255, 255, 255), menu_rect, 3)
+        title_text = font_title.render("PAUSE", True, c.WHITE)
+        screen.blit(title_text, (c.SCREEN_WIDTH // 2 -
+                    title_text.get_width() // 2, menu_rect.y + 20))
+        txt_resume = font_main.render("[ESC] ゲームに戻る", True, c.WHITE)
+        txt_title_p = font_main.render("[ T ] タイトルへ", True, c.WHITE)
+        txt_quit = font_main.render("[ Q ] 終了する", True, c.RED)
+        cx = c.SCREEN_WIDTH // 2; sy = menu_rect.y + 80
+        screen.blit(txt_resume, (cx - txt_resume.get_width() // 2, sy))
+        screen.blit(
+            txt_title_p, (cx - txt_title_p.get_width() // 2, sy + 40))
+        screen.blit(txt_quit, (cx - txt_quit.get_width() // 2, sy + 80))
 
-    # 座標表示
-    pos_surf = font_main.render(
-        f"X: {int(player_pos[0])} Y: {int(player_pos[1])}", True, (255, 255, 0))
-    screen.blit(pos_surf, (c.SCREEN_WIDTH - pos_surf.get_width() - 20, 20))
+    pygame.display.flip()
 
-  pygame.display.flip()
-  clock.tick(c.FPS)
+    # Webブラウザへの制御戻し（非常に重要）
+    await asyncio.sleep(0)
+
+# 非同期メインループの実行
+asyncio.run(main())
