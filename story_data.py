@@ -157,7 +157,7 @@ class StoryManager:
             "next": None
         },
         "anna_after": {
-            "text": ["何？鍵はあげたでしょ？行くなら行きましょ。"],
+            "text": ["頑張って何か探しましょう。"],
             "face_id": "anna",
             "type": "normal",
             "next": None
