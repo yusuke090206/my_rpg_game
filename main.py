@@ -321,7 +321,7 @@ while True:
   elif game_state == "ENDING_0":
     screen.fill((0, 0, 0))  # 黒
     title_surf = font_huge.render("GAME OVER", True, (100, 100, 100))
-    sub_surf = font_title.render("- 物語は始まらなかった -", True, c.WHITE)
+    sub_surf = font_title.render("- これでよかったのか？ -", True, c.WHITE)
     screen.blit(title_surf, (c.SCREEN_WIDTH // 2 -
                 title_surf.get_width() // 2, 200))
     screen.blit(sub_surf, (c.SCREEN_WIDTH // 2 -
