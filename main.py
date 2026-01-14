@@ -11,8 +11,9 @@ import debug_tool
 
 # --- 1. 初期化 ---
 pygame.init()
+# フルスクリーンと拡大設定
 screen = pygame.display.set_mode(
-    (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.FULLSCREEN | c.SCREEN_HEIGHT)
+    (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.SCALED)
 pygame.display.set_caption("16世紀の探偵 RPG")
 clock = pygame.time.Clock()
 
@@ -195,14 +196,18 @@ while True:
 
             if not story.next_step():
               # ▼▼▼ 修正ポイント：会話終了時の遷移処理 ▼▼▼
-              # シーンIDに含まれる文字で判定（より確実です）
+              # シーンIDに含まれる文字で判定
 
               if "door_open" in last_scene_id:
                 maps.load_map("mansion_inside")
                 player_pos = list(maps.get_spawn_pos())
                 game_state = "EXPLORING"
 
-              # エンディング分岐
+              # ▼ ENDING_0 (拒否エンド) の判定を追加
+              elif "end_0" in last_scene_id:
+                game_state = "ENDING_0"
+
+              # エンディング分岐 (1~5)
               elif "end_1" in last_scene_id:
                 game_state = "ENDING_1"
               elif "end_2" in last_scene_id:
@@ -312,7 +317,16 @@ while True:
   if game_state == "TITLE":
     title_ui.draw(screen)
 
-  # ▼▼▼ 修正ポイント：エンディングごとの描画を独立させる ▼▼▼
+  # ▼▼▼ 修正ポイント：エンディングごとの描画 ▼▼▼
+  elif game_state == "ENDING_0":
+    screen.fill((0, 0, 0))  # 黒
+    title_surf = font_huge.render("GAME OVER", True, (100, 100, 100))
+    sub_surf = font_title.render("- 物語は始まらなかった -", True, c.WHITE)
+    screen.blit(title_surf, (c.SCREEN_WIDTH // 2 -
+                title_surf.get_width() // 2, 200))
+    screen.blit(sub_surf, (c.SCREEN_WIDTH // 2 -
+                sub_surf.get_width() // 2, 320))
+
   elif game_state == "ENDING_1":
     screen.fill((50, 0, 0))  # 赤
     title_surf = font_huge.render("BAD ENDING", True, (255, 100, 100))

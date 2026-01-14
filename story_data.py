@@ -34,7 +34,8 @@ class StoryManager:
         "choice_scene": {
             "text": ["この依頼、引き受けようか？"],
             "type": "choice",
-            "choices": {"Y": "accept", "N": "stay"}
+            # ▼ 変更: Nの飛び先を end_0_refuse に変更
+            "choices": {"Y": "accept", "N": "end_0_refuse"}
         },
         "accept": {
             "text": [
@@ -46,8 +47,9 @@ class StoryManager:
             "face_id": "main",
             "next": None  # マップへ
         },
-        "stay": {
-            "text": ["怪しい依頼は断ろう。この依頼は受けない。"],
+        # ▼ 変更: シーン名を end_0_refuse に変更
+        "end_0_refuse": {
+            "text": ["怪しい依頼は断ろう。この依頼は受けない。", "私は家に帰って寝ることにするよ。"],
             "type": "normal",
             "next": None,
             "face_id": "main",
@@ -220,7 +222,7 @@ class StoryManager:
             "face_id": "main",
             "type": "normal",
             "next": None,
-            "give_item": "新式の拳銃"  # スペースを削除しました
+            "give_item": "新式の拳銃"
         },
         "huhu_picture": {
             "text": [
