@@ -1,11 +1,13 @@
-# story_data.py
+import pygame
+
 class StoryManager:
   def __init__(self):
     self.current_scene = "start_scene"
     self.text_index = 0
-    self.items = []
+    self.items = []  # 所持アイテムリスト
 
     self.scenes = {
+        # --- オープニング ---
         "start_scene": {
             "text": [
                 "少し昔のとある世界のとある街。",
@@ -17,7 +19,7 @@ class StoryManager:
         },
         "intro": {
             "text": [
-                "記憶を失ってから長いこと立ったけど探偵業も板についてきたな",
+                "記憶を失ってから長いこと経ったけど探偵業も板についてきたな",
                 "まだ妻は見つけられてないんだけど…",
                 "新しい依頼だ。",
                 "？この依頼書…",
@@ -35,21 +37,24 @@ class StoryManager:
             "choices": {"Y": "accept", "N": "stay"}
         },
         "accept": {
-            "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。",
-                     "行方不明の人もいるらしいね", "気を付けよう。"
-                     ],
+            "text": [
+                "……よし、屋敷へ向かうとしよう。準備を整えるか。",
+                "行方不明の人もいるらしいね",
+                "気を付けよう。"
+            ],
             "type": "normal",
             "face_id": "main",
-            "next": None
+            "next": None  # マップへ
         },
         "stay": {
             "text": ["怪しい依頼は断ろう。この依頼は受けない。"],
             "type": "normal",
             "next": None,
             "face_id": "main",
-            "is_ending": True,
+            "is_ending": True,  # ゲームオーバー扱い
         },
 
+        # --- 探索イベント ---
         "desk_investigation": {
             "text": [
                 "机の上に、一枚の写真が置かれている。",
@@ -58,7 +63,6 @@ class StoryManager:
             "face_id": "main",
             "type": "normal",
             "next": "photo_choice",
-            "is_ending": False
         },
         "photo_choice": {
             "text": ["この写真を持っていきますか？"],
@@ -101,8 +105,10 @@ class StoryManager:
             "choices": {"Y": "get_ring", "N": "leave_ring"}
         },
         "get_ring": {
-            "text": ["こんなところに指輪がある。後で持ち主を探そう。",
-                     "彼女にも似たような指輪をあげたような気がするな"],
+            "text": [
+                "こんなところに指輪がある。後で持ち主を探そう。",
+                "彼女にも似たような指輪をあげたような気がするな"
+            ],
             "face_id": "main",
             "type": "normal",
             "next": None,
@@ -114,17 +120,19 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
-        # --- story_data.py 50行目付近 ---
-        "npc_guard": {  # これをジョン（門番）にします
-            "text": ["あんたも屋敷の調査に来たのか？",
-                     "俺はジョン。よろしくな。",
-                     "鍵が欲しいなら、あの娘らに頼んでみるといいぞ。",
-                     "中に入ったら左下の部屋から順に反時計回りに見てみるといい。",
-                     "そして最後に右下の部屋を見ればいい。",
-                     "俺はまだ庭を見て回るからな。",
-                     "中から出てこなかった連中もいる気をつけろよ。",
-                     ],
-            "face_id": "john",  # face_managerに登録した名前
+
+        # --- NPCイベント ---
+        "npc_guard": {
+            "text": [
+                "あんたも屋敷の調査に来たのか？",
+                "俺はジョン。よろしくな。",
+                "鍵が欲しいなら、あの娘らに頼んでみるといいぞ。",
+                "中に入ったら左下の部屋から順に反時計回りに見てみるといい。",
+                "そして最後に右下の部屋を見ればいい。",
+                "俺はまだ庭を見て回るからな。",
+                "中から出てこなかった連中もいる気をつけろよ。",
+            ],
+            "face_id": "john",
             "type": "normal",
             "next": "john_after"
         },
@@ -134,13 +142,13 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
-        "npc_anna": {  # これをアンナにします
+        "npc_anna": {
             "text": [
                 "あなたも屋敷の調査に来たの？",
                 "あたしはアンナ。よろしくね。",
                 "その子はモニカっていうらしいわ。",
             ],
-            "face_id": "anna",  # face_managerに登録した名前
+            "face_id": "anna",
             "type": "normal",
             "next": "monika_intro"
         },
@@ -148,7 +156,7 @@ class StoryManager:
             "text": [
                 "お、おねがします。",
             ],
-            "face_id": "monika",  # face_managerに登録した名前
+            "face_id": "monika",
             "type": "normal",
             "next": "anna_give_key"
         },
@@ -159,13 +167,24 @@ class StoryManager:
             ],
             "face_id": "anna",
             "type": "normal",
-            "give_item": "古びた鍵",  # main.pyの既存機能で追加されます
+            "give_item": "古びた鍵",
             "next": None
         },
         "anna_after": {
             "text": ["頑張って何か探しましょう。"],
             "face_id": "anna",
             "type": "normal",
+            "next": None
+        },
+
+        # --- 屋敷内のイベント ---
+        "npc_erena": {
+            "type": "normal",
+            "text": [
+                "あら、見ない顔ね。",
+                "この屋敷、夜になると不思議な音がするのよ..."
+            ],
+            "face_id": "erena",
             "next": None
         },
         "door_locked": {
@@ -179,7 +198,7 @@ class StoryManager:
             "face_id": None,
             "type": "normal",
             "next": None,
-            "is_door_open": True  # 扉が開いたことを示す目印（任意）
+            "is_door_open": True
         },
         "mansion_flower": {
             "text": [
@@ -201,7 +220,7 @@ class StoryManager:
             "face_id": "main",
             "type": "normal",
             "next": None,
-            "give_item": " 新式の拳銃"
+            "give_item": "新式の拳銃"  # スペースを削除しました
         },
         "huhu_picture": {
             "text": [
@@ -261,23 +280,22 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
-        # --- 判定用ダミーシーン（main.pyで検知して分岐させるための目印） ---
-        "witch_check_no_gun": {"type": "normal", "text": ["..."]},  # 銃なし判定
-        "witch_check_shoot": {"type": "normal", "text": ["..."]},  # 撃った時のアイテム判定
-        # 撃たなかった時のアイテム判定
+
+        # --- 魔女イベント制御用 ---
+        "witch_check_no_gun": {"type": "normal", "text": ["..."]},
+        "witch_check_shoot": {"type": "normal", "text": ["..."]},
         "witch_check_spare": {"type": "normal", "text": ["..."]},
 
-        # --- 選択肢イベント ---
         "witch_gun_choice": {
             "type": "choice",
             "text": [
-                    "魔女はあなたをじっと見つめている。",
-                    "懐には「新式の拳銃」がある...",
-                    "撃ちますか？",
+                "魔女はあなたをじっと見つめている。"
+                "懐には「新式の拳銃」がある..."
+                "撃ちますか？",
             ],
             "choices": {
-                "Y": "witch_check_shoot",  # 撃つ -> アイテム判定へ
-                "N": "witch_check_spare"  # 撃たない -> アイテム判定へ
+                "Y": "witch_check_shoot",
+                "N": "witch_check_spare"
             },
             "face_id": None,
         },
@@ -286,93 +304,86 @@ class StoryManager:
         "end_1_bad_helpless": {
             "type": "normal",
             "text": [
-                    "今更何しに来たの？",
+                "今更何しに来たの？",
             ],
             "face_id": "witch",
-
             "next": "end_1_bad_helpless_2"
         },
         "end_1_bad_helpless_2": {
             "type": "normal",
             "text": [
-                    "魔女は冷たくそう言うと、あなたに近づいてきた。",
-                    "魔女の手があなたの喉元に伸びる。",
+                "魔女は冷たくそう言うと、あなたに近づいてきた。",
+                "魔女の手があなたの喉元に伸びる。",
             ],
-
             "face_id": None,
             "next": "end_1_bad_helpless_3"
         },
         "end_1_bad_helpless_3": {
             "type": "normal",
             "text": [
-                    "君は誰なんだい？"
+                "君は誰なんだい？"
             ],
             "is_ending": True,
             "face_id": "main",
             "next": None
         },
 
-
-
         # --- エンディング 2: 持ち物あり・銃なし（助かる） ---
         "end_2_pure_peace": {
             "type": "normal",
             "text": [
-                    "君なんだろう？",
-                    "ねぇエレナ",
-                    "すべて思い出せたよ。",
+                "君なんだろう？",
+                "ねぇエレナ",
+                "すべて思い出せたよ。",
             ],
-            "is_ending": True, "face_id": "main",
+            "is_ending": True,  # ここからエンディング演出開始
+            "face_id": "main",
             "next": "end_2_pure_peace_2"
         },
         "end_2_pure_peace_2": {
             "type": "normal",
             "text": [
-                    "やっと思い出してくれたのね。",
-                    "ありがとう……あなた。",
-                    "でも私はもう人として生きていけないわ。",
-                    "さよなら、あなた。",
+                "やっと思い出してくれたのね。",
+                "ありがとう……あなた。",
+                "でも私はもう人として生きていけないわ。",
+                "さよなら、あなた。",
             ],
-
             "face_id": "witch",
             "next": "end_2_pure_peace_3"
         },
         "end_2_pure_peace_3": {
             "type": "normal",
             "text": [
-                    "………",
-                    "彼女は静かに微笑んで、あなたの手を握った。",
+                "………",
+                "彼女は静かに微笑んで、あなたの手を握った。",
             ],
-
             "face_id": None,
             "next": "end_2_pure_peace_4"
         },
         "end_2_pure_peace_4": {
             "type": "normal",
             "text": [
-                    "僕のせいだね。",
+                "僕のせいだね。",
             ],
-
             "face_id": "main",
             "next": "end_2_pure_peace_5"
         },
         "end_2_pure_peace_5": {
             "type": "normal",
             "text": [
-                    "いいえ、違うわ。",
-                    "私たちのせいよ。",
-                    "来世ではきっと幸せになりましょうね。",
+                "いいえ、違うわ。",
+                "私たちのせいよ。",
+                "来世ではきっと幸せになりましょうね。",
             ],
-
             "face_id": "erena",
             "next": "end_2_pure_peace_6"
         },
         "end_2_pure_peace_6": {
             "type": "normal",
             "text": [
-                    "あぁ、そうだね。",
-                    "必ず君を迎えに行くよ。",
-                    "どれだけかかってもね。",
+                "あぁ、そうだね。",
+                "必ず君を迎えに行くよ。",
+                "どれだけかかってもね。",
             ],
             "face_id": "main",
             "next": "end_2_pure_peace_7"
@@ -380,7 +391,7 @@ class StoryManager:
         "end_2_pure_peace_7": {
             "type": "normal",
             "text": [
-                    "ふふっ、楽しみに待ってるわ。",
+                "ふふっ、楽しみに待ってるわ。",
             ],
             "face_id": "erena",
             "next": "end_2_pure_peace_8"
@@ -388,7 +399,7 @@ class StoryManager:
         "end_2_pure_peace_8": {
             "type": "normal",
             "text": [
-                    "彼女は息を引き取った。",
+                "彼女は息を引き取った。",
             ],
             "is_ending": True,
             "face_id": None,
@@ -399,9 +410,9 @@ class StoryManager:
         "end_3_ruthless_kill": {
             "type": "normal",
             "text": [
-                    "引き金を引いた。",
-                    "BAN!",
-                    "銃声が響き渡る。",
+                "引き金を引いた。",
+                "BAN!",
+                "銃声が響き渡る。",
             ],
             "is_ending": True,
             "next": "end_3_ruthless_kill_2",
@@ -410,7 +421,6 @@ class StoryManager:
             "type": "normal",
             "text": [
                 "あなたならそうすると思ってたわ"
-
             ],
             "face_id": "witch",
             "next": "end_3_ruthless_kill_3"
@@ -429,125 +439,109 @@ class StoryManager:
         "end_4_tragic_kill": {
             "type": "normal",
             "text": [
-                    "BAN!",
-                    "銃声が響き渡る。",
+                "BAN!",
+                "銃声が響き渡る。",
             ],
-
+            "is_ending": True,
             "face_id": None,
             "next": "end_4_tragic_kill_2"
         },
         "end_4_tragic_kill_2": {
             "type": "normal",
             "text": [
-                    "あぁ……撃ったのね",
-                    "あなたならそうすると思ってたわ。"
+                "あぁ……撃ったのね",
+                "あなたならそうすると思ってたわ。"
             ],
-
             "face_id": "witch",
             "next": "end_4_tragic_kill_3"
         },
         "end_4_tragic_kill_3": {
             "type": "normal",
             "text": [
-                    "君を魔女として生かしておくつもりはないよ",
-                    "僕は誰より君を愛しているのだから",
+                "君を魔女として生かしておくつもりはないよ",
+                "僕は誰より君を愛しているのだから",
             ],
-
             "face_id": "main",
             "next": "end_4_tragic_kill_4"
         },
         "end_4_tragic_kill_4": {
             "type": "normal",
             "text": [
-                    "5年ぶりに愛してるって言ってくれたわね……",
-                    "すごく……うれしい"
+                "5年ぶりに愛してるって言ってくれたわね……",
+                "すごく……うれしい"
             ],
-
             "face_id": "erena",
             "next": "end_4_tragic_kill_5"
         },
         "end_4_tragic_kill_5": {
             "type": "normal",
             "text": [
-                    "君のためなら……"
-                    "何度でも言ってあげるさ。",
-
+                "君のためなら……",
+                "何度でも言ってあげるさ。",
             ],
             "is_ending": True,
-            "face_id": None,
+            "face_id": "main",
             "next": None,
         },
-
 
         # --- エンディング 5: 持ち物あり・銃を持ちつつ撃たない（完全和解） ---
         "end_5_true_peace": {
             "type": "normal",
             "text": [
-                    "君なんだろう？",
-                    "ねぇエレナ",
-                    "やっと思い出せたよ。",
+                "君なんだろう？",
+                "ねぇエレナ",
+                "やっと思い出せたよ。",
             ],
-
+            "is_ending": True,
             "face_id": "main",
             "next": "end_5_true_peace_2"
         },
         "end_5_true_peace_2": {
             "type": "normal",
             "text": [
-                    "やっと思い出してくれたのね。",
-                    "ありがとう……あなた。",
-                    "何度迎えに来てくれることを願ったかしれない。",
-                    "でも私はもう表では生きていけないわ。",
-                    "さよなら、愛しい人。",
+                "やっと思い出してくれたのね。",
+                "ありがとう……あなた。",
+                "何度迎えに来てくれることを願ったかしれない。",
+                "でも私はもう表では生きていけないわ。",
+                "さよなら、愛しい人。",
             ],
-
             "face_id": "witch",
             "next": "end_5_true_peace_3"
         },
         "end_5_true_peace_3": {
             "type": "normal",
             "text": [
-                    "関係ない",
-                    "僕たちならやり直せるさ。",
-                    "さあ、帰ろう。",
+                "関係ない",
+                "僕たちならやり直せるさ。",
+                "さあ、帰ろう。",
             ],
-
             "face_id": "main",
             "next": "end_5_true_peace_4"
         },
         "end_5_true_peace_4": {
             "type": "normal",
             "text": [
-                    "………",
-                    "そうね…ありがとう、あなた。",
-                    "さあ、行きましょう。",
+                "………",
+                "そうね…ありがとう、あなた。",
+                "さあ、行きましょう。",
             ],
-
             "face_id": "erena",
             "next": "end_5_true_peace_5"
         },
         "end_5_true_peace_5": {
             "type": "normal",
             "text": [
-                    "あぁ、行こう。"
+                "あぁ、行こう。"
             ],
-
+            "is_ending": True,
             "face_id": "main",
             "next": None
         },
-
     }
 
-    self.current_scene = "start_scene"
-    self.text_index = 0
-    self.items = []
-
-  # story_data.py の 135行目付近
-
   def get_current_scene_data(self):
-      # もし current_scene が空、または scenes に存在しない名前なら
     if not self.current_scene or self.current_scene not in self.scenes:
-      # 安全のために最初のシーンを返す、もしくはダミーを返す
+      # エラー防止用のダミー
       return {
           "text": ["（ここには特に何もなさそうだ……）"],
           "face_id": None,
@@ -557,16 +551,24 @@ class StoryManager:
     return self.scenes[self.current_scene]
 
   def get_current_text(self):
-    return self.scenes[self.current_scene]["text"][self.text_index]
+    data = self.get_current_scene_data()
+    if self.text_index < len(data["text"]):
+      return data["text"][self.text_index]
+    return ""
 
   def next_step(self):
-    scene = self.scenes[self.current_scene]
+    scene = self.get_current_scene_data()
     self.text_index += 1
-    if self.text_index >= len(scene["text"]):
-      if scene.get("next"):
-        self.current_scene = scene["next"]
-        self.text_index = 0
-        return True
-      else:
-        return False
-    return True
+
+    # 現在のセリフがまだ残っている場合
+    if self.text_index < len(scene["text"]):
+      return True
+
+    # セリフが終わった場合 -> next があれば次のシーンへ自動遷移
+    if scene.get("next"):
+      self.current_scene = scene["next"]
+      self.text_index = 0
+      return True
+
+    # next が None の場合 -> 会話終了（マップに戻る or エンディング画面へ）
+    return False

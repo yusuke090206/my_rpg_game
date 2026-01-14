@@ -11,7 +11,8 @@ import debug_tool
 
 # --- 1. 初期化 ---
 pygame.init()
-screen = pygame.display.set_mode((c.SCREEN_WIDTH, c.SCREEN_HEIGHT))
+screen = pygame.display.set_mode(
+    (c.SCREEN_WIDTH, c.SCREEN_HEIGHT), pygame.FULLSCREEN | c.SCREEN_HEIGHT)
 pygame.display.set_caption("16世紀の探偵 RPG")
 clock = pygame.time.Clock()
 
@@ -83,8 +84,8 @@ def draw_dialogue_ui():
   full_text = story.get_current_text()
   display_text = full_text[:visible_char_count]
 
-  text_x = 60 if face_id else 60
-  line_limit = 25 if face_id else 25
+  text_x = 160 if face_id else 60  # 顔があるときはテキストを右にずらす
+  line_limit = 25
 
   lines = [display_text[i:i + line_limit]
            for i in range(0, len(display_text), line_limit)]
@@ -106,10 +107,15 @@ while True:
       visible_char_count += 1
       text_timer = 0
 
-    # ▼▼▼ 5つのエンディング分岐処理 ▼▼▼
+    # ▼▼▼ 5つのエンディング分岐開始処理 ▼▼▼
+    # ここは「エンディングの会話シーンを開始させる」ための処理
     def check_items_complete():
       required_items = ["夫婦写真", "懐かしいパン", "指輪", "美しい花", "同じ夫婦写真", "楽譜"]
-      return all(item in story.items for item in required_items)
+      # 全て持っているかチェック
+      for item in required_items:
+        if item not in story.items:
+          return False
+      return True
 
     current = story.current_scene
     target_scene = None
@@ -183,19 +189,35 @@ while True:
             if item_name and item_name not in story.items:
               story.items.append(item_name)
 
-            # 次へ
-            current_scene_id = story.current_scene
+            # 次へ進む
+            # ここで現在のシーンIDを覚えておく（会話が終わった瞬間の判定に使うため）
+            last_scene_id = story.current_scene
+
             if not story.next_step():
-              # 特殊イベント
-              if current_scene_id == "door_open":
+              # ▼▼▼ 修正ポイント：会話終了時の遷移処理 ▼▼▼
+              # シーンIDに含まれる文字で判定（より確実です）
+
+              if "door_open" in last_scene_id:
                 maps.load_map("mansion_inside")
                 player_pos = list(maps.get_spawn_pos())
-
-              # 状態遷移 (エンディングかどうか)
-              if scene.get("is_ending", False):
-                game_state = "ENDING"
-              else:
                 game_state = "EXPLORING"
+
+              # エンディング分岐
+              elif "end_1" in last_scene_id:
+                game_state = "ENDING_1"
+              elif "end_2" in last_scene_id:
+                game_state = "ENDING_2"
+              elif "end_3" in last_scene_id:
+                game_state = "ENDING_3"
+              elif "end_4" in last_scene_id:
+                game_state = "ENDING_4"
+              elif "end_5" in last_scene_id:
+                game_state = "ENDING_5"
+
+              else:
+                # エンディングでなければ探索へ戻る
+                game_state = "EXPLORING"
+              # ▲▲▲ 修正ポイントここまで ▲▲▲
 
             visible_char_count = 0
 
@@ -248,15 +270,14 @@ while True:
       if event.type == pygame.KEYDOWN and event.key in [pygame.K_e, pygame.K_ESCAPE]:
         game_state = "EXPLORING"
 
-    # --- エンディング画面 ---
-    elif game_state == "ENDING":
+    # --- エンディング画面 (共通操作) ---
+    elif game_state.startswith("ENDING"):
       # Rキーでタイトルへ
       if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
         game_state = "TITLE"
         story.current_scene = "start_scene"
         story.text_index = 0
         visible_char_count = 0
-        # アイテムリセット等はStoryManagerのinitが必要だが簡易的に
         story.items = []
         maps.load_map("town")
         player_pos = list(maps.get_spawn_pos())
@@ -291,62 +312,48 @@ while True:
   if game_state == "TITLE":
     title_ui.draw(screen)
 
-  elif game_state == "ENDING":
-    screen.fill((0, 0, 0))  # 背景は黒
+  # ▼▼▼ 修正ポイント：エンディングごとの描画を独立させる ▼▼▼
+  elif game_state == "ENDING_1":
+    screen.fill((50, 0, 0))  # 赤
+    title_surf = font_huge.render("BAD ENDING", True, (255, 100, 100))
+    sub_surf = font_title.render("- 真相は？ -", True, c.WHITE)
+    screen.blit(title_surf, (250, 200))
+    screen.blit(sub_surf, (280, 320))
 
-    # エンディングごとの設定
-    # シーンID: {タイトル, サブタイトル, 色}
-    ending_config = {
-        "end_1_bad_helpless": {
-            "title": "BAD ENDING",
-            "sub": "無力な最期",
-            "color": (200, 50, 50)  # 赤
-        },
-        "end_2_pure_peace": {
-            "title": "TRUE ENDING A",
-            "sub": "純粋な和解",
-            "color": (150, 255, 255)  # 水色
-        },
-        "end_3_ruthless_kill": {
-            "title": "NORMAL ENDING",
-            "sub": "冷徹な仕事",
-            "color": (180, 180, 180)  # グレー
-        },
-        "end_4_tragic_kill": {
-            "title": "BAD ENDING",
-            "sub": "拭えない後悔",
-            "color": (150, 100, 200)  # 紫
-        },
-        "end_5_true_peace": {
-            "title": "TRUE ENDING B",
-            "sub": "真の探偵",
-            "color": (255, 215, 0)  # 金色
-        }
-    }
+  elif game_state == "ENDING_2":
+    screen.fill((0, 20, 50))  # 青
+    title_surf = font_huge.render("TRUE ENDING A", True, (100, 255, 255))
+    sub_surf = font_title.render("- 永遠の別れ -", True, c.WHITE)
+    screen.blit(title_surf, (200, 200))
+    screen.blit(sub_surf, (300, 320))
 
-    # 現在のシーンIDから設定を取得
-    current_end = ending_config.get(story.current_scene, {
-        "title": "THE END",
-        "sub": "...",
-        "color": c.WHITE
-    })
+  elif game_state == "ENDING_3":
+    screen.fill((20, 20, 20))  # グレー
+    title_surf = font_huge.render("NORMAL ENDING", True, (180, 180, 180))
+    sub_surf = font_title.render("- これでお別れ？ -", True, c.WHITE)
+    screen.blit(title_surf, (200, 200))
+    screen.blit(sub_surf, (280, 320))
 
-    # タイトル描画
-    title_surf = font_huge.render(
-        current_end["title"], True, current_end["color"])
-    screen.blit(title_surf, (c.SCREEN_WIDTH // 2 -
-                title_surf.get_width() // 2, 200))
+  elif game_state == "ENDING_4":
+    screen.fill((30, 0, 30))  # 紫
+    title_surf = font_huge.render("BAD ENDING", True, (200, 100, 200))
+    sub_surf = font_title.render("- 君を愛してる -", True, c.WHITE)
+    screen.blit(title_surf, (250, 200))
+    screen.blit(sub_surf, (300, 320))
 
-    # サブタイトル描画
-    sub_surf = font_title.render(f"- {current_end['sub']} -", True, c.WHITE)
-    screen.blit(sub_surf, (c.SCREEN_WIDTH // 2 -
-                sub_surf.get_width() // 2, 320))
+  elif game_state == "ENDING_5":
+    screen.fill((80, 60, 0))  # 金/茶
+    title_surf = font_huge.render("TRUE ENDING B", True, (255, 215, 0))
+    sub_surf = font_title.render("- もう一度始めから -", True, c.WHITE)
+    screen.blit(title_surf, (200, 200))
+    screen.blit(sub_surf, (280, 320))
 
-    # リスタート案内
+  # エンディング共通のリスタート文字
+  if game_state.startswith("ENDING"):
     restart_text = font_main.render(
-        "Press R to Title", True, (100, 100, 100))
-    screen.blit(restart_text, (c.SCREEN_WIDTH // 2 -
-                restart_text.get_width() // 2, 500))
+        "Press R to Title", True, (200, 200, 200))
+    screen.blit(restart_text, (350, 500))
+  # ▲▲▲ 描画処理ここまで ▲▲▲
 
   else:
     # 暗転演出 (銃殺エンドの会話中のみ)
@@ -365,7 +372,7 @@ while True:
           screen.blit(img, obj["rect"][:2])
       if HAS_IMAGE:
         screen.blit(get_image(sprite_sheet, frame, direction,
-                    c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE), player_pos)
+                              c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE), player_pos)
       else:
         pygame.draw.rect(screen, c.BLUE, (*player_pos, 40, 80))
 
@@ -380,14 +387,13 @@ while True:
       overlay.fill((0, 0, 0, 150))
       screen.blit(overlay, (0, 0))
       # ...ポーズメニューの描画...
-      # (省略せずに描画するため既存コードを維持)
       menu_rect = pygame.Rect(
           c.SCREEN_WIDTH // 2 - 150, c.SCREEN_HEIGHT // 2 - 100, 300, 200)
       pygame.draw.rect(screen, (30, 30, 30), menu_rect)
       pygame.draw.rect(screen, (255, 255, 255), menu_rect, 3)
       title_text = font_title.render("PAUSE", True, c.WHITE)
       screen.blit(title_text, (c.SCREEN_WIDTH // 2 -
-                  title_text.get_width() // 2, menu_rect.y + 20))
+                               title_text.get_width() // 2, menu_rect.y + 20))
       txt_resume = font_main.render("[ESC] ゲームに戻る", True, c.WHITE)
       txt_title_p = font_main.render("[ T ] タイトルへ", True, c.WHITE)
       txt_quit = font_main.render("[ Q ] 終了する", True, c.RED)
