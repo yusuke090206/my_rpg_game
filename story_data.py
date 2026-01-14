@@ -178,11 +178,34 @@ class StoryManager:
             "text": [
                 "こんなところに拳銃？",
                 "必要になることがあるかもしれない。持っていこう。",
-            ],  
+            ],
             "face_id": "main",
-            "type": "normal", 
+            "type": "normal",
             "next": None,
             "give_item": " 新しい拳銃"
+        },
+        "huhu_picture": {
+            "text": [
+                "この写真…",
+                "家にあるのと同じ夫婦写真だ。",
+                "なんでここに…？",
+                "大事な何かが思い出せそうな気がする。",
+            ],
+            "face_id": "main",
+            "type": "normal",
+            "next": None,
+            "give_item": "同じ夫婦写真"
+        },
+        "piano_sheet_music": {
+            "text": [
+                "この楽譜…",
+                "妻がよく弾いていた曲だ。",
+                "思い出が蘇ってくる。",
+            ],
+            "face_id": "main",
+            "type": "normal",
+            "next": None,
+            "give_item": "楽譜"
         },
 
     }
