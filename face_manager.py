@@ -19,7 +19,7 @@ def init():
   image_manager.init()
 
   # 登録したいキャラクター名のリスト
-  char_names = ["main", "john", "monika", "anna"]
+  char_names = ["main", "john", "monika", "anna", "witch", "erena"]
 
   for name in char_names:
     # image_manager から元画像を取得 (例: john_face)

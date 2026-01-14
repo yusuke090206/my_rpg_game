@@ -98,12 +98,34 @@ def draw_dialogue_ui():
 
 # --- 4. メインループ ---
 while True:
-  # 会話中の文字送りタイマー
+  # 会話中の文字送りタイマーと自動判定ロジック
   if game_state == "DIALOGUE":
     text_timer += 1
     if text_timer >= text_speed:
       visible_char_count += 1
       text_timer = 0
+
+    # ▼▼▼ 追加: 魔女イベントのアイテム判定ロジック ▼▼▼
+    # シーンが「witch_judge_start」になった瞬間、所持品をチェックして分岐させる
+    if story.current_scene == "witch_judge_start":
+      required_items = [
+          "夫婦写真",
+          "懐かしいパン",
+          "指輪",
+          "美しい花",
+          "同じ夫婦写真",
+          "楽譜"
+      ]
+      # 全アイテムを持っているかチェック
+      if all(item in story.items for item in required_items):
+        story.current_scene = "witch_true_end"  # トゥルーエンドへ
+      else:
+        story.current_scene = "witch_bad_end"  # バッドエンドへ
+
+      # テキスト表示をリセット
+      story.text_index = 0
+      visible_char_count = 0
+    # ▲▲▲ ここまで ▲▲▲
 
   # ▼ イベント処理ループ ▼
   for event in pygame.event.get():
@@ -191,12 +213,22 @@ while True:
 
           if obj:
             target = obj.get("target_scene")
+
+            # --- ▼▼▼ 追加: 魔女と拳銃の分岐ロジック ▼▼▼ ---
+            if obj.get("char_id") == "witch":
+              if "新式の拳銃" in story.items:
+                target = "witch_gun_choice"  # 撃つかどうかの選択肢へ
+              else:
+                target = "witch_judge_start"  # 直接アイテム判定へ
+            # --- ▲▲▲ ここまで ▲▲▲ ---
+
             # アンナと鍵の条件分岐
-            if obj.get("char_id") == "anna":
+            elif obj.get("char_id") == "anna":
               if "古びた鍵" in story.items:
                 target = "anna_after"
               else:
                 target = "npc_anna"
+
             # 扉と鍵の条件分岐
             elif target == "door_locked":
               print(f"現在の所持品: {story.items}")
@@ -265,28 +297,36 @@ while True:
     screen.blit(restart_text, (c.SCREEN_WIDTH // 2 - 100, 500))
 
   else:
-    # マップとオブジェクトの描画
-    maps.draw(screen)
-    debug_tool.draw_debug_info(screen, maps)
-    debug_tool.draw_grid(screen)
+    # --- ▼▼▼ 暗転演出の追加 ▼▼▼ ---
+    # 銃で撃ったシーン(witch_shoot_end)なら、マップやキャラを描画せず黒背景にする
+    if story.current_scene == "witch_shoot_end":
+      screen.fill((0, 0, 0))
 
-    current_objects = maps.all_maps[maps.current_map_key].get("objects", [])
-    for obj in current_objects:
-      cid = obj.get("char_id")
-      if cid in npc_sheets:
-        npc_dir = obj.get("direction", 0)
-        npc_img = get_image(
-            npc_sheets[cid], 1, npc_dir, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
-        screen.blit(npc_img, (obj["rect"][0], obj["rect"][1]))
-
-    # プレイヤーの描画
-    if HAS_IMAGE:
-      curr_s = get_image(sprite_sheet, frame, direction,
-                         c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
-      screen.blit(curr_s, player_pos)
     else:
-      pygame.draw.rect(
-          screen, c.BLUE, (player_pos[0], player_pos[1], 40, 80))
+      # 通常時はマップ、デバッグ、NPC、プレイヤーを描画
+      maps.draw(screen)
+      debug_tool.draw_debug_info(screen, maps)
+      debug_tool.draw_grid(screen)
+
+      current_objects = maps.all_maps[maps.current_map_key].get(
+          "objects", [])
+      for obj in current_objects:
+        cid = obj.get("char_id")
+        if cid in npc_sheets:
+          npc_dir = obj.get("direction", 0)
+          npc_img = get_image(
+              npc_sheets[cid], 1, npc_dir, c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
+          screen.blit(npc_img, (obj["rect"][0], obj["rect"][1]))
+
+      # プレイヤーの描画
+      if HAS_IMAGE:
+        curr_s = get_image(sprite_sheet, frame, direction,
+                           c.SPRITE_WIDTH, c.SPRITE_HEIGHT, c.SCALE)
+        screen.blit(curr_s, player_pos)
+      else:
+        pygame.draw.rect(
+            screen, c.BLUE, (player_pos[0], player_pos[1], 40, 80))
+    # --- ▲▲▲ ここまで ▲▲▲ ---
 
     # UIオーバーレイの描画
     if game_state == "DIALOGUE":

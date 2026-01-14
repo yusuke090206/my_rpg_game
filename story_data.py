@@ -1,11 +1,15 @@
 # story_data.py
 class StoryManager:
   def __init__(self):
+    self.current_scene = "start_scene"
+    self.text_index = 0
+    self.items = []
+
     self.scenes = {
         "start_scene": {
             "text": [
                 "少し昔のとある世界のとある街。",
-                "あなたは５年前事故で記憶を失ってしまい生き別れた妻を探すために探偵業を始めた。",
+                "あなたは５年前事故で記憶を失ってしまい生き別れた妻、エレナを探すために探偵業を始めた。",
             ],
             "face_id": None,
             "type": "normal",
@@ -31,7 +35,9 @@ class StoryManager:
             "choices": {"Y": "accept", "N": "stay"}
         },
         "accept": {
-            "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。"],
+            "text": ["……よし、屋敷へ向かうとしよう。準備を整えるか。",
+                     "行方不明の人もいるらしいね", "気を付けよう。"
+                     ],
             "type": "normal",
             "face_id": "main",
             "next": None
@@ -195,7 +201,7 @@ class StoryManager:
             "face_id": "main",
             "type": "normal",
             "next": None,
-            "give_item": " 新しい拳銃"
+            "give_item": " 新式の拳銃"
         },
         "huhu_picture": {
             "text": [
@@ -255,7 +261,280 @@ class StoryManager:
             "type": "normal",
             "next": None
         },
+        # --- 判定用ダミーシーン（main.pyで検知して分岐させるための目印） ---
+        "witch_check_no_gun": {"type": "normal", "text": ["..."]},  # 銃なし判定
+        "witch_check_shoot": {"type": "normal", "text": ["..."]},  # 撃った時のアイテム判定
+        # 撃たなかった時のアイテム判定
+        "witch_check_spare": {"type": "normal", "text": ["..."]},
 
+        # --- 選択肢イベント ---
+        "witch_gun_choice": {
+            "type": "choice",
+            "text": [
+                    "魔女はあなたをじっと見つめている。",
+                    "懐には「新式の拳銃」がある...",
+                    "撃ちますか？",
+            ],
+            "choices": {
+                "Y": "witch_check_shoot",  # 撃つ -> アイテム判定へ
+                "N": "witch_check_spare"  # 撃たない -> アイテム判定へ
+            },
+            "face_id": None,
+        },
+
+        # --- エンディング 1: 持ち物なし・銃なし（殺される） ---
+        "end_1_bad_helpless": {
+            "type": "normal",
+            "text": [
+                    "今更何しに来たの？",
+            ],
+            "face_id": "witch",
+
+            "next": "end_1_bad_helpless_2"
+        },
+        "end_1_bad_helpless_2": {
+            "type": "normal",
+            "text": [
+                    "魔女は冷たくそう言うと、あなたに近づいてきた。",
+                    "魔女の手があなたの喉元に伸びる。",
+            ],
+
+            "face_id": None,
+            "next": "end_1_bad_helpless_3"
+        },
+        "end_1_bad_helpless_3": {
+            "type": "normal",
+            "text": [
+                    "君は誰なんだい？"
+            ],
+            "is_ending": True,
+            "face_id": "main",
+            "next": None
+        },
+
+
+
+        # --- エンディング 2: 持ち物あり・銃なし（助かる） ---
+        "end_2_pure_peace": {
+            "type": "normal",
+            "text": [
+                    "君なんだろう？",
+                    "ねぇエレナ",
+                    "すべて思い出せたよ。",
+            ],
+            "is_ending": True, "face_id": "main",
+            "next": "end_2_pure_peace_2"
+        },
+        "end_2_pure_peace_2": {
+            "type": "normal",
+            "text": [
+                    "やっと思い出してくれたのね。",
+                    "ありがとう……あなた。",
+                    "でも私はもう人として生きていけないわ。",
+                    "さよなら、あなた。",
+            ],
+
+            "face_id": "witch",
+            "next": "end_2_pure_peace_3"
+        },
+        "end_2_pure_peace_3": {
+            "type": "normal",
+            "text": [
+                    "………",
+                    "彼女は静かに微笑んで、あなたの手を握った。",
+            ],
+
+            "face_id": None,
+            "next": "end_2_pure_peace_4"
+        },
+        "end_2_pure_peace_4": {
+            "type": "normal",
+            "text": [
+                    "僕のせいだね。",
+            ],
+
+            "face_id": "main",
+            "next": "end_2_pure_peace_5"
+        },
+        "end_2_pure_peace_5": {
+            "type": "normal",
+            "text": [
+                    "いいえ、違うわ。",
+                    "私たちのせいよ。",
+                    "来世ではきっと幸せになりましょうね。",
+            ],
+
+            "face_id": "erena",
+            "next": "end_2_pure_peace_6"
+        },
+        "end_2_pure_peace_6": {
+            "type": "normal",
+            "text": [
+                    "あぁ、そうだね。",
+                    "必ず君を迎えに行くよ。",
+                    "どれだけかかってもね。",
+            ],
+            "face_id": "main",
+            "next": "end_2_pure_peace_7"
+        },
+        "end_2_pure_peace_7": {
+            "type": "normal",
+            "text": [
+                    "ふふっ、楽しみに待ってるわ。",
+            ],
+            "face_id": "erena",
+            "next": "end_2_pure_peace_8"
+        },
+        "end_2_pure_peace_8": {
+            "type": "normal",
+            "text": [
+                    "彼女は息を引き取った。",
+            ],
+            "is_ending": True,
+            "face_id": None,
+            "next": None
+        },
+
+        # --- エンディング 3: 持ち物なし・銃で撃つ（殺害） ---
+        "end_3_ruthless_kill": {
+            "type": "normal",
+            "text": [
+                    "引き金を引いた。",
+                    "BAN!",
+                    "銃声が響き渡る。",
+            ],
+            "is_ending": True,
+            "next": "end_3_ruthless_kill_2",
+        },
+        "end_3_ruthless_kill_2": {
+            "type": "normal",
+            "text": [
+                "あなたならそうすると思ってたわ"
+
+            ],
+            "face_id": "witch",
+            "next": "end_3_ruthless_kill_3"
+        },
+        "end_3_ruthless_kill_3": {
+            "type": "normal",
+            "text": [
+                "あなたならってどういうことだ？"
+            ],
+            "face_id": "main",
+            "is_ending": True,
+            "next": None,
+        },
+
+        # --- エンディング 4: 持ち物あり・銃で撃つ（後悔） ---
+        "end_4_tragic_kill": {
+            "type": "normal",
+            "text": [
+                    "BAN!",
+                    "銃声が響き渡る。",
+            ],
+
+            "face_id": None,
+            "next": "end_4_tragic_kill_2"
+        },
+        "end_4_tragic_kill_2": {
+            "type": "normal",
+            "text": [
+                    "あぁ……撃ったのね",
+                    "あなたならそうすると思ってたわ。"
+            ],
+
+            "face_id": "witch",
+            "next": "end_4_tragic_kill_3"
+        },
+        "end_4_tragic_kill_3": {
+            "type": "normal",
+            "text": [
+                    "君を魔女として生かしておくつもりはないよ",
+                    "僕は誰より君を愛しているのだから",
+            ],
+
+            "face_id": "main",
+            "next": "end_4_tragic_kill_4"
+        },
+        "end_4_tragic_kill_4": {
+            "type": "normal",
+            "text": [
+                    "5年ぶりに愛してるって言ってくれたわね……",
+                    "すごく……うれしい"
+            ],
+
+            "face_id": "erena",
+            "next": "end_4_tragic_kill_5"
+        },
+        "end_4_tragic_kill_5": {
+            "type": "normal",
+            "text": [
+                    "君のためなら……"
+                    "何度でも言ってあげるさ。",
+
+            ],
+            "is_ending": True,
+            "face_id": None,
+            "next": None,
+        },
+
+
+        # --- エンディング 5: 持ち物あり・銃を持ちつつ撃たない（完全和解） ---
+        "end_5_true_peace": {
+            "type": "normal",
+            "text": [
+                    "君なんだろう？",
+                    "ねぇエレナ",
+                    "やっと思い出せたよ。",
+            ],
+
+            "face_id": "main",
+            "next": "end_5_true_peace_2"
+        },
+        "end_5_true_peace_2": {
+            "type": "normal",
+            "text": [
+                    "やっと思い出してくれたのね。",
+                    "ありがとう……あなた。",
+                    "何度迎えに来てくれることを願ったかしれない。",
+                    "でも私はもう表では生きていけないわ。",
+                    "さよなら、愛しい人。",
+            ],
+
+            "face_id": "witch",
+            "next": "end_5_true_peace_3"
+        },
+        "end_5_true_peace_3": {
+            "type": "normal",
+            "text": [
+                    "関係ない",
+                    "僕たちならやり直せるさ。",
+                    "さあ、帰ろう。",
+            ],
+
+            "face_id": "main",
+            "next": "end_5_true_peace_4"
+        },
+        "end_5_true_peace_4": {
+            "type": "normal",
+            "text": [
+                    "………",
+                    "そうね…ありがとう、あなた。",
+                    "さあ、行きましょう。",
+            ],
+
+            "face_id": "erena",
+            "next": "end_5_true_peace_5"
+        },
+        "end_5_true_peace_5": {
+            "type": "normal",
+            "text": [
+                    "あぁ、行こう。"
+            ],
+
+            "face_id": "main",
+            "next": None
+        },
 
     }
 
