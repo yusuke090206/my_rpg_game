@@ -569,9 +569,6 @@
    'C:\\Users\\ando '
    'yusuke\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\http\\server.py',
    'PYMODULE'),
-  ('image_manager',
-   'C:\\Users\\ando yusuke\\my_rpg_game\\image_manager.py',
-   'PYMODULE'),
   ('importlib',
    'C:\\Users\\ando '
    'yusuke\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\importlib\\__init__.py',

@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys  # ★追加: exe化判定に必要
 import constants as c
 from maps import home_map, mansion_inside, mansion_out, town_map, forest_map, piano_room, syokutaku, monooki, sinsitu
 
@@ -31,7 +32,14 @@ class MapManager:
     # ファイル名だけを取り出す（パスの二重化防止）
     img_name = os.path.basename(data.get("img_path", ""))
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # ★修正ポイント: exe化対応のパス取得
+    if getattr(sys, 'frozen', False):
+      # exeの場合: exeファイルがある場所を基準にする
+      base_dir = os.path.dirname(sys.executable)
+    else:
+      # 開発中の場合: このファイルがある場所を基準にする
+      base_dir = os.path.dirname(os.path.abspath(__file__))
+
     img_path = os.path.join(base_dir, "assets", "images", img_name)
 
     if os.path.exists(img_path):
@@ -42,6 +50,8 @@ class MapManager:
       except:
         self.bg_image = None
     else:
+      # 画像が見つからない場合はログを出す（デバッグ用）
+      print(f"背景画像が見つかりません: {img_path}")
       self.bg_image = None
 
   def get_spawn_pos(self):
