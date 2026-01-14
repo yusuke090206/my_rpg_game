@@ -23,7 +23,7 @@ DATA = {
             "name": "魔女",
             "char_id": "witch",
             "rect": (214, 154, 100, 64),
-            "target_scene": "npc_witch"  # 調べた時に飛ぶシーン名
+            "target_scene": "witch_check_no_gun"  # 調べた時に飛ぶシーン名
         }
     ]
 }
