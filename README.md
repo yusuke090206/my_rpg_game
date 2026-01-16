@@ -11,15 +11,15 @@
 
 ## プレイ画面
 -----
-<img src="/image/image0.png" width="500px">  
+<img src="/image/image0.png" width="400px">  
 
-<img src="/image/image1.png" width="500px">  
+<img src="/image/image1.png" width="400px">  
 
-<img src="/image/image2.png" width="500px">  
+<img src="/image/image2.png" width="400px">  
 
-<img src="/image/image3.png" width="500px">  
+<img src="/image/image3.png" width="400px">  
 
-<img src="/image/image4.png" width="500px">  
+<img src="/image/image4.png" width="400px">  
 
 
 ## 操作方法
@@ -29,10 +29,10 @@ Fキーで自分の立っている座標を中心に調べる、話しかける�
 ゲームを終わらせたい場合はESCを押すことでタイトルに戻るかゲームを終了できる。
 
 ## 写真などの素材
-**使用ライブラリ**
+キャラクターの素材はキャラクター合成器を用いて作成しました。<br>マップは生成AI(gemini)を用いて作成しました。
 
 ## エンディング条件
-収集できるアイテム一覧
+**収集できるアイテム一覧**
 - 夫婦写真
 - 懐かしいパン
 - 指輪
