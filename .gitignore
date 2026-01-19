@@ -1,9 +1,9 @@
 # --- Python 関連 ---
 __pycache__/
 .venv/
-.vscode
-dist
-build
+.vscode/
+dist/
+build/
 
 # --- 画像アセットの一括除外 ---
 # assets/images フォルダの中身をすべて無視する
